@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <idea-plugin>
-    <description>Python-specific features requiring PythonCore.</description>
-    <depends>com.intellij.modules.python</depends>
+    <!-- Optional PythonCore sub-descriptor: no <description> here — it has no effect in a
+         config-file sub-descriptor and the platform logs a PluginException at load if present. -->
 </idea-plugin>
