@@ -4,3 +4,6 @@ build/
 *.iml
 .idea/
 .intellijPlatform/
+
+# Kotlin daemon session files
+.kotlin/
