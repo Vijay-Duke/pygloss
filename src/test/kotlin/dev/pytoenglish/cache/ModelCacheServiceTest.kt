@@ -178,6 +178,13 @@ class ModelCacheServiceTest : BasePlatformTestCase() {
         assertFalse("Unchanged sibling should stay fresh", cache.isStale(farewell.stableId))
         assertNull("Changed block LLM body should be invalidated", cache.readLlmBody(greet.psiHash))
         assertEquals("farewell summary", cache.readLlmBody(farewell.psiHash))
+
+        // Re-detect + put of the changed model must NOT clear the stale flag; only
+        // regeneration (markBlockFresh) clears it. Guards against the putLocked wipe bug.
+        cache.put(cache.keyFor(modelHash(changed), Profile.INTENT_SUMMARY, VerbosityLevel.HINTS), changed)
+        assertTrue("Changed block stays stale after re-detect+put", cache.isStale(greet.stableId))
+        cache.markBlockFresh(greet.stableId)
+        assertFalse("Changed block clears only after regeneration", cache.isStale(greet.stableId))
     }
 
     // ---- Test: promptVersion bump → LLM entries invalidated, deterministic retained ----

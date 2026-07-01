@@ -226,7 +226,9 @@ class ModelCacheService(private val project: Project) : Disposable {
         }
         models[key] = model
         latestModelByFileId[model.fileId] = model
-        model.flattenBlocks().forEach { staleBlockIds.remove(it.stableId) }
+        // Do NOT clear stale flags here: a re-detect+put after a semantic edit must
+        // leave changed blocks stale until their summary is regenerated. Stale is
+        // cleared per-block by markBlockFresh() on regeneration (IntentSummaryPipeline).
         trimToMaxSize()
     }
 
