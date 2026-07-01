@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<idea-plugin>
+    <id>dev.pytoenglish</id>
+    <name>py-to-english</name>
+    <version>0.1.0</version>
+    <vendor email="dev@pytoenglish.dev">py-to-english</vendor>
+
+    <description><![CDATA[
+        English-over-Python reader plugin. Renders deterministic English annotations
+        over Python source without modifying the file.
+    ]]></description>
+
+    <depends>com.intellij.modules.platform</depends>
+    <depends config-file="python-features.xml">com.intellij.modules.python</depends>
+
+    <extensions defaultExtensionNs="com.intellij">
+        <applicationConfigurable
+            parentId="tools"
+            instance="dev.pytoenglish.settings.PlaceholderConfigurable"
+            id="dev.pytoenglish.settings"
+            displayName="py-to-english"/>
+    </extensions>
+</idea-plugin>
