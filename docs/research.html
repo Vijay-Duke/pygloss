@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>English Over Python in the PyCharm Editor</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,500;0,8..60,600;1,8..60,400&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" id="hljs-theme" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-light.min.css">
+<style>
+
+:root{
+  /* LIGHT — warm paper */
+  --bg:#fffdf8; --surface:#f7f2e8; --surface-2:#f1ece2; --border:#e9e0cf; --border-soft:#efe7d6;
+  --text:#2b2520; --heading:#1a1510; --muted:#6f6557; --faint:#9a8f7c;
+  --accent:#b14a2e; --accent-2:#2d5d8a; --accent-soft:#f6f0e3;
+  --bh-blue:#2d5d8a; --bh-amber:#c8920f; --bh-green:#5a7a3a; --bh-violet:#6b5b95;
+  --ok:#5a7a3a; --warn:#a9772a; --err:#b3402e; --info:#2d5d8a;
+  --code-bg:#f1ece2; --code-text:#8a3d1f;
+  --serif:'Source Serif 4',Georgia,'Times New Roman',serif;
+  --display:'Newsreader',Georgia,serif;
+  --mono:'IBM Plex Mono',ui-monospace,SFMono-Regular,Menlo,monospace;
+  --shell:1340px; --rail:260px; --gap:64px; --measure:84ch; --radius:8px;
+  --fs:19px; --lh:1.7; --ease:cubic-bezier(.2,.7,.2,1);
+}
+[data-theme="dark"]{
+  --bg:#1a1510; --surface:#221c15; --surface-2:#28211a; --border:#352c22; --border-soft:#2d251d;
+  --text:#e6ddcf; --heading:#f4ece0; --muted:#a59a87; --faint:#7a7060;
+  --accent:#e0794f; --accent-2:#6fa8d0; --accent-soft:#2a2018;
+  --bh-blue:#6fa8d0; --bh-amber:#d6a45a; --bh-green:#9fc06a; --bh-violet:#a796c8;
+  --ok:#9fc06a; --warn:#d6a45a; --err:#e0795f; --info:#6fa8d0;
+  --code-bg:#28211a; --code-text:#e9a576;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0; background:var(--bg); color:var(--text); font-family:var(--serif);
+  font-size:var(--fs); line-height:var(--lh); -webkit-font-smoothing:antialiased;
+  text-rendering:optimizeLegibility; transition:background .3s,color .3s}
+.layout{display:grid; grid-template-columns:var(--rail) minmax(0,1fr); gap:var(--gap);
+  max-width:var(--shell); margin:0 auto; padding:0 36px}
+/* progress */
+.progress{position:fixed; top:0; left:0; right:0; height:3px; z-index:60; background:transparent}
+.progress>span{display:block; height:100%; width:0; background:var(--accent); transition:width .1s linear}
+/* sidebar — IDE tree TOC */
+aside{position:sticky; top:0; align-self:start; height:100vh; overflow-y:auto; padding:44px 0; border-right:1px solid var(--border)}
+.brand{font-family:var(--display); font-weight:700; font-size:19px; color:var(--heading)}
+.brand .dot{color:var(--accent)}
+.brand-sub{color:var(--faint); font-size:12px; font-family:var(--mono); margin-bottom:18px}
+.readtime{font-family:var(--mono); font-size:11px; color:var(--faint); margin-bottom:22px; letter-spacing:.02em}
+nav a{display:block; color:var(--muted); text-decoration:none; font-family:var(--mono); font-size:13px;
+  line-height:1.4; padding:6px 12px 6px 14px; border-left:2px solid transparent;
+  transition:color .2s var(--ease),background .2s var(--ease),transform .2s var(--ease)}
+nav a::before{content:"\203A  "; color:var(--faint)}
+nav a.sub{padding-left:26px; font-size:12px}
+nav a.sub::before{content:"\2022  "; color:var(--faint)}
+nav a:hover{color:var(--text); transform:translateX(2px)}
+nav a.active{color:#fff; background:var(--accent); border-left-color:var(--accent)}
+[data-theme="dark"] nav a.active{color:#1a1510}
+nav a.active::before{color:rgba(255,255,255,.7)}
+[data-theme="dark"] nav a.active::before{color:rgba(26,21,16,.6)}
+/* reading column — wide single column */
+main{padding:60px 0 150px; max-width:var(--measure)}
+/* masthead */
+.doc-meta{display:flex; gap:18px; flex-wrap:wrap; color:var(--faint); font-family:var(--mono);
+  font-size:11px; text-transform:uppercase; letter-spacing:.12em; margin-bottom:14px}
+.doc-title{font-family:var(--display); font-size:clamp(38px,5vw,52px); font-weight:700; line-height:1.08;
+  letter-spacing:-.018em; color:var(--heading); margin:0; padding:16px 0;
+  border-top:3px double var(--heading); border-bottom:3px double var(--heading)}
+.doc-lead{font-size:21px; line-height:1.55; color:var(--muted); margin:22px 0 44px; font-weight:400; max-width:74ch}
+/* headings + bauhaus markers */
+h2{font-family:var(--display); font-size:30px; font-weight:600; letter-spacing:-.01em; color:var(--heading);
+  margin:64px 0 18px; padding-bottom:10px; border-bottom:1px solid var(--border); scroll-margin-top:24px;
+  display:flex; align-items:center; gap:14px}
+h2::before{content:""; flex:0 0 auto; width:15px; height:15px; border-radius:50%; background:var(--bh-blue);
+  transition:transform .5s var(--ease),opacity .5s var(--ease)}
+h2:nth-of-type(4n+1)::before{background:var(--accent)}
+h2:nth-of-type(4n+2)::before{background:var(--bh-amber)}
+h2:nth-of-type(4n+3)::before{background:var(--bh-green)}
+h2:nth-of-type(4n+4)::before{background:var(--bh-violet)}
+h3{font-family:var(--display); font-size:21px; font-weight:600; color:var(--heading); margin:38px 0 14px;
+  scroll-margin-top:24px; display:flex; align-items:center; gap:10px}
+h3::before{content:""; flex:0 0 auto; width:9px; height:9px; background:var(--accent-2)}
+/* drop cap */
+h2 + p::first-letter{font-family:var(--display); font-weight:700; font-size:3.2em; line-height:.78;
+  float:left; padding:8px 12px 0 0; color:var(--accent)}
+p{margin:0 0 18px}
+a{color:var(--accent); text-decoration:none; background-image:linear-gradient(var(--accent),var(--accent));
+  background-size:0% 1.5px; background-position:0 100%; background-repeat:no-repeat;
+  transition:background-size .25s var(--ease); padding-bottom:1px}
+a:hover{background-size:100% 1.5px}
+ul,ol{padding-left:24px} li{margin:8px 0}
+hr{border:none; border-top:1px solid var(--border); margin:48px 0}
+blockquote{margin:0 0 18px; padding:4px 0 4px 22px; border-left:3px solid var(--accent); color:var(--muted); font-style:italic}
+strong{font-weight:600; color:var(--heading)}
+/* code — IDE accent rail */
+code{font-family:var(--mono); font-size:.8em; background:var(--code-bg); color:var(--code-text); padding:2px 6px; border-radius:4px}
+pre{position:relative; background:var(--surface); border:1px solid var(--border); border-left:3px solid var(--accent);
+  border-radius:var(--radius); padding:18px 20px; overflow-x:auto; margin:0 0 18px}
+pre code{background:none; color:inherit; padding:0; font-size:14px; line-height:1.6}
+/* callouts */
+.callout{display:grid; grid-template-columns:auto 1fr; gap:12px; padding:14px 18px; border-radius:var(--radius);
+  background:var(--surface); margin:0 0 18px; font-size:16px; line-height:1.55; position:relative; overflow:hidden}
+.callout::after{content:""; position:absolute; left:0; top:0; bottom:0; width:3px; transform-origin:top;
+  transition:transform .5s var(--ease)}
+.callout .ic{font-size:15px; line-height:1.7}
+.callout > div > :last-child{margin-bottom:0}
+.callout.note::after{background:var(--info)}    .callout.note .ic{color:var(--info)}
+.callout.tip::after{background:var(--ok)}        .callout.tip .ic{color:var(--ok)}
+.callout.warn::after{background:var(--warn)}     .callout.warn .ic{color:var(--warn)}
+.callout.danger::after{background:var(--err)}    .callout.danger .ic{color:var(--err)}
+/* badges */
+.badge{display:inline-flex; align-items:center; gap:6px; font-family:var(--mono); font-size:11px; font-weight:500;
+  padding:3px 10px; border-radius:20px; border:1px solid var(--border)}
+.badge::before{content:""; width:6px; height:6px; border-radius:50%; background:var(--faint)}
+.badge.done::before{background:var(--ok)} .badge.done{color:var(--ok)}
+.badge.wip::before{background:var(--warn)} .badge.wip{color:var(--warn)}
+.badge.block::before{background:var(--err)} .badge.block{color:var(--err)}
+.bar{height:9px; background:var(--surface-2); border:1px solid var(--border); border-radius:6px; overflow:hidden; margin:0 0 18px}
+.bar>span{display:block; height:100%; background:var(--accent)}
+/* tables */
+table{width:100%; border-collapse:collapse; margin:0 0 18px; font-size:15px}
+th,td{text-align:left; padding:10px 14px; border-bottom:1px solid var(--border-soft); vertical-align:top}
+thead th{position:sticky; top:0; background:var(--bg); z-index:1; font-family:var(--display); color:var(--muted);
+  font-weight:600; font-size:13px; border-bottom:2px solid var(--border)}
+tbody tr{transition:background .15s var(--ease)}
+tbody tr:hover{background:var(--surface)}
+td.num,th.num{text-align:right; font-family:var(--mono); font-variant-numeric:tabular-nums}
+/* stat cards — bauhaus cycling top border */
+.cards{display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:14px; margin:0 0 24px}
+.card{background:var(--surface); border:1px solid var(--border); border-top:3px solid var(--accent);
+  border-radius:var(--radius); padding:18px; transition:transform .2s var(--ease),box-shadow .2s var(--ease)}
+.card:nth-child(4n+2){border-top-color:var(--bh-blue)}
+.card:nth-child(4n+3){border-top-color:var(--bh-amber)}
+.card:nth-child(4n+4){border-top-color:var(--bh-green)}
+.card:hover{transform:translateY(-3px); box-shadow:0 10px 28px -14px rgba(0,0,0,.32)}
+.card .k{color:var(--faint); font-size:12px; font-family:var(--mono)}
+.card .v{font-family:var(--display); font-size:30px; font-weight:700; color:var(--heading); margin-top:4px; line-height:1}
+.card .d{font-size:13px; color:var(--ok); margin-top:6px}
+/* figures — breakout */
+figure{margin:0 0 22px; background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); padding:24px}
+@media(min-width:1280px){ figure{width:min(112%,1000px)} }
+figcaption{font-family:var(--mono); color:var(--faint); font-size:12px; text-align:center; margin-top:14px}
+.mermaid{display:flex; justify-content:center}
+.chart{width:100%; height:360px}
+/* theme toggle */
+.toggle{position:fixed; top:22px; right:26px; z-index:20; background:var(--surface); border:1px solid var(--border);
+  color:var(--muted); border-radius:20px; padding:8px 15px; font-family:var(--mono); font-size:12px; cursor:pointer;
+  transition:color .15s,border-color .15s}
+.toggle:hover{color:var(--accent); border-color:var(--accent)}
+.toggle .ico{display:inline-block; transition:transform .4s var(--ease)}
+[data-theme="dark"] .toggle .ico{transform:rotate(180deg)}
+@media print{ aside,.toggle,.progress{display:none} .layout{display:block} main{padding:0;max-width:none} }
+@media(max-width:980px){ .layout{grid-template-columns:1fr; gap:0} aside{display:none} main{max-width:none} body{font-size:17px} }
+
+/* ---- micro-animations (reduced-motion safe) ---- */
+@media (prefers-reduced-motion: no-preference){
+  .reveal{opacity:0; transform:translateY(14px); transition:opacity .6s var(--ease),transform .6s var(--ease)}
+  .reveal.in{opacity:1; transform:none}
+  h2.reveal::before{transform:scale(.5); opacity:0}
+  h2.reveal.in::before{transform:scale(1); opacity:1; transition-delay:.15s}
+  .callout.reveal::after{transform:scaleY(0)}
+  .callout.reveal.in::after{transform:scaleY(1); transition-delay:.1s}
+  .mha{opacity:0; transform:translateY(12px); animation:rise .7s var(--ease) forwards}
+  .doc-meta.mha{animation-delay:.05s} .doc-title.mha{animation-delay:.14s}
+  .doc-lead.mha{animation-delay:.26s} .cards.mha{animation-delay:.36s}
+  @keyframes rise{to{opacity:1; transform:none}}
+  figure svg, .chart{animation:fade .6s var(--ease) both}
+  @keyframes fade{from{opacity:0} to{opacity:1}}
+}
+
+</style>
+</head>
+<body>
+<div class="progress"><span></span></div>
+<button class="toggle" onclick="toggleTheme()" aria-label="Toggle theme"><span class="ico">◐</span> theme</button>
+<div class="layout">
+  <aside>
+    <div class="brand">py-to-english</div>
+    <div class="brand-sub">research</div>
+    <div class="readtime"></div>
+    <nav id="toc">
+      <a href="#tldr">TL;DR</a>
+      <a href="#the-core-mechanism">The core mechanism</a>
+      <a href="#recommended-rendering">Recommended rendering</a>
+      <a href="#pycharm-python-specifics">PyCharm / Python specifics</a>
+      <a href="#generating-the-english">Generating the English</a>
+      <a href="#model-provider-settings">Model & provider settings</a>
+      <a href="#the-two-settings">The two settings</a>
+      <a href="#the-two-profiles">The two profiles</a>
+      <a href="#architecture-data-flow">Architecture / data flow</a>
+      <a href="#shared-engine-swappable-profiles">Shared engine swappable profiles</a>
+      <a href="#prior-art-sources">Prior art & sources</a>
+      <a href="#permanently-excluded">Permanently excluded</a>
+      <a href="#day-1-scope">Day-1 scope</a>
+    </nav>
+  </aside>
+  <main>
+    <div class="doc-meta mha"><span>Research / feasibility + design · py-to-english · Platform: IntelliJ Platform (PyCharm)</span></div>
+    <h1 class="doc-title mha">English Over Python in the PyCharm Editor</h1>
+    <p class="doc-lead mha">How to render "englishish" text over Python source in the PyCharm editor — feasibility, the best rendering surfaces, how to generate the text cheaply, and a design informed by Google's Natural Language Outlines research and two rounds of adversarial review (codex CLI). Headline shifts: don't replace code line-by-line — layer a block-level outline over an editor that stays the source of truth; the audience is developers, all of it (PyCharm has no non-programmers), so this is a polyglot-dev reading aid, not an accountant tool; and there is no phased MVP — both reader profiles, all verbosity presets, all rendering surfaces, and a configurable LLM provider (OpenAI-compatible <em>and</em> Anthropic) ship on day one.</p>
+
+    <h2 id="tldr">TL;DR</h2>
+    <ul><li><strong>Feasible, ~1:1 port of a JetBrains folding plugin.</strong> PyCharm is the IntelliJ Platform; the rendering surfaces are language-neutral. Only two things change from a Java plugin: target Python PSI, depend on the Python plugin.</li><li><strong>Don't lead with per-line "replace."</strong> Both Google's <em>Natural Language Outlines</em> research and codex review agree: per-line English is noise ("loop over invoices" adds nothing). Partition code into <strong>semantically-coherent blocks</strong>, one intent-carrying sentence each.</li><li><strong>The editor stays the source of truth.</strong> English is an added, linked, disposable <em>layer</em> — not a replacement editor. Primary surface = a <strong>synced outline pane</strong>; secondary = <strong>block inlays</strong>; folding only for tiny deterministic idioms.</li><li><strong>Generate deterministically first, let the LLM polish.</strong> Build the block structure + rough gloss from PSI (no hallucination, cacheable), then optionally have an LLM summarize. Local <code>gpt-oss-20b</code> via Ollama for privacy, or cheap cloud (Haiku 4.5).</li><li><strong>Two settings, done right:</strong> verbosity as <strong>3–4 named presets</strong> (Code / Hints / Outline / Reader), not a continuous slider; and swappable <strong>reader profiles</strong> ("Python for JS/Java/Go/C#" vs a general intent-summary aid) — all aimed at developers.</li><li><strong>The audience is developers — there is no non-programmer in PyCharm.</strong> So "plain English for accountants" is a mirage. The real readers are all devs: polyglot devs reading Python, learners, people onboarding to an unfamiliar repo, and reviewers. Design for them.</li><li><strong>No MVP — everything ships day one.</strong> Both reader profiles (polyglot lens + intent summary), all four verbosity presets, all three rendering surfaces, and full provider settings are in the first release. "Polyglot is deterministic, intent-summary is LLM-backed" is an <em>implementation</em> distinction, not a shipping order.</li><li><strong>Configurable LLM provider, both ecosystems.</strong> Settings take <strong>model name + base URL + API key</strong>, and support <strong>both OpenAI-compatible and Anthropic</strong> endpoints — so local <code>gpt-oss</code> (Ollama), OpenAI, Groq/Together/OpenRouter, <em>and</em> Claude all work behind one setting.</li><li><strong>Permanently excluded (safety/scope, not phasing):</strong> per-line replacement, bidirectional sync (edit English → rewrite Python), a full custom editor, LSP, and a continuous slider.</li></ul>
+    <h2 id="the-core-mechanism">The core mechanism</h2>
+    <p>Three platform surfaces let you render text over/around code without touching the file on disk. They compose.</p>
+    <h3 id="a-code-folding-foldingbuilderex-the-replace-surface">A. Code folding (<code>FoldingBuilderEx</code>) — the "replace" surface</h3>
+    <p><code>buildFoldRegions()</code> walks the PSI and emits fold regions; <code>getPlaceholderText()</code> returns your English; <code>isCollapsedByDefault()=true</code> shows English first. Registered via <code>com.intellij.lang.foldingBuilder</code>. Expanding restores the real Python; the file never changes. <strong>Ceiling:</strong> placeholder text is single-line, unstyled, and folding is <strong>synchronous</strong> — so it fits rule-based text only, never async LLM prose. Use it only for tiny idioms (comprehensions, boolean expressions, obvious <code>if</code>/<code>return</code>).</p>
+    <h3 id="b-inlay-hints-code-vision-the-overlay-surface">B. Inlay hints / Code Vision — the "overlay" surface</h3>
+    <p>Renders extra text around code without hiding it. <code>DeclarativeInlayHintsProvider</code> (2023.1+) computes in the background, so it tolerates async/LLM text. For richer block UI than declarative inlays allow, drop to <code>InlayModel</code> / <code>EditorCustomElementRenderer</code>, or <code>CodeVisionProvider</code> / <code>DaemonBoundCodeVisionProvider</code> for a prose line above each declaration (PSI-bound → auto-invalidates on edit). This is the in-editor "overlay" look closest to Advanced Java Folding.</p>
+    <h3 id="c-rendered-reader-mode-precedent-for-a-toggled-english-view">C. Rendered / reader mode — precedent for a toggled English view</h3>
+    <p>JetBrains editors already render non-code in place: Javadoc/Markdown <strong>reader mode</strong>, toggled by a gutter icon (<code>Ctrl+Alt+Q</code>, "Render documentation comments in place"). This is proof the platform supports a toggled, rendered-in-editor view — the natural home for a "show English" toggle.</p>
+    <p><strong>Rejected surfaces:</strong> a full <strong>custom editor</strong> (fights PyCharm's editing, inspections, navigation, refactoring, VCS, debugger, accessibility) and <strong>LSP</strong> (this is a PSI <em>projection</em> problem, not a language-server one). JetBrains <strong>MPS</strong> is the conceptual north-star — a projectional editor where English would be one <em>notation</em> of the same AST — but MPS is a separate workbench with no Python, so it's inspiration, not a usable path.</p>
+    <h2 id="recommended-rendering">Recommended rendering</h2>
+    <table><thead><tr><th>Tier</th><th>Surface</th><th>Role</th><th>Why</th></tr></thead><tbody><tr><td><strong>1 (primary)</strong></td><td>Synced <strong>outline pane</strong> (tool window / right split)</td><td>Block/function summaries linked to PSI ranges; click English → select code, caret → highlight block</td><td>Cleaner for readers than dense overlays; doesn't fight PyCharm; the code stays authoritative</td></tr><tr><td><strong>2 (secondary)</strong></td><td><strong>Block inlays / Code Vision</strong></td><td>One prose line above each meaningful block/function, in-editor</td><td>The "overlay" look matching the Java-folding precedent; async-safe</td></tr><tr><td><strong>3 (optional)</strong></td><td><strong>Folding</strong></td><td>Collapse tiny deterministic idioms to a short gloss</td><td>Instant, offline; only for local patterns, never LLM prose</td></tr></tbody></table>
+    <p>Plus supporting affordances: <strong>quick-doc hover</strong> ("explain this block"), <strong>gutter icons</strong> (explain / cache-status / <strong>stale</strong> badge), and <strong>export the outline</strong> — a reader may want a shareable artifact, not an IDE-only view.</p>
+    <h2 id="pycharm-python-specifics">PyCharm / Python specifics</h2>
+    <p>Declare the Python plugin as an <strong>optional</strong> dependency so one build serves Community + Pro:</p>
+    <pre><code>&lt;!-- plugin.xml --&gt;
+&lt;depends optional="true" config-file="python-features.xml"&gt;PythonCore&lt;/depends&gt;  &lt;!-- PyCharm Community --&gt;
+&lt;depends optional="true" config-file="python-features.xml"&gt;Pythonid&lt;/depends&gt;    &lt;!-- PyCharm Professional --&gt;
+&lt;!-- or module-style: --&gt;
+&lt;depends optional="true"&gt;com.intellij.modules.python&lt;/depends&gt;</code></pre>
+    <p>Gradle (IntelliJ Platform Gradle Plugin 2.x): add <code>bundledPlugin("PythonCore")</code> (or <code>Pythonid</code>). Target Python PSI in <code>com.jetbrains.python.psi</code>: <code>PyFunction</code>, <code>PyClass</code>, <code>PyIfStatement</code>, <code>PyForStatement</code>, <code>PyWithStatement</code>, <code>PyTryExceptStatement</code>, <code>PyCallExpression</code>, <code>PyComprehensionElement</code>, <code>PyDecorator</code>, <code>PyYieldExpression</code>, etc. Everything else (extension points, folding/inlay APIs, threading, read actions) is identical to a Java plugin — the rendering layer is language-neutral.</p>
+    <h2 id="generating-the-english">Generating the English</h2>
+    <p>Rendering is solved; <em>what English to show</em> is the product. The winning shape, per the research and review:</p>
+    <h3 id="deterministic-skeleton-first-llm-polish-second">Deterministic skeleton first, LLM polish second</h3>
+    <p>Build the block structure and a rough gloss from PSI — deterministic, offline, cacheable, debuggable, zero hallucination. Only then hand a block to an LLM to summarize/refine. Don't let the LLM own the whole job; it multiplies hallucination and cost.</p>
+    <ul><li><strong>Rule-based (skeleton):</strong> templates per PSI node. <code>for x in items:</code> → block "for each item…"; comprehension → "the list of … for every … where …". Instant, deterministic.</li><li><strong>LLM (polish / whole-function intent):</strong> "keep the invoices over the threshold that aren't flagged, mark each approved, and return them." Async only.</li></ul>
+    <h3 id="model-cost">Model & cost</h3>
+    <ul><li><strong>Cheapest cloud:</strong> <strong>Claude Haiku 4.5</strong> — <code>$1 / $5</code> per 1M tokens (input/output). A short function ≈ 150 in / 80 out ≈ $0.0006/call uncached.</li><li><strong>Local / private:</strong> <strong>gpt-oss-20b via Ollama</strong> (<code>ollama run gpt-oss:20b</code>, OpenAI-compatible at <code>localhost:11434</code>). Source never leaves the machine — the decisive factor for a code tool. gpt-oss-120b needs ~80GB VRAM and is overkill; the 20B is plenty for englishish. Make the endpoint pluggable — both speak OpenAI-compatible JSON.</li><li><strong>Two-layer cache (the real cost lever):</strong></li><li><strong>On-disk cache keyed by a normalized PSI-subtree hash</strong> — skip the call entirely when code is unchanged. In an editor this kills the vast majority of calls.</li><li><strong>Provider prompt caching</strong> for the calls that do fire — cache the stable system prompt (rules + few-shot); the code snippet is the volatile suffix. Haiku's minimum cacheable prefix is 4096 tokens.</li><li>Full cache key: <code>{psiHash, audienceProfile, verbosityLevel, promptVersion, pluginVersion}</code>.</li></ul>
+    <h3 id="architecture-constraint">Architecture constraint</h3>
+    <p>Folding is <strong>synchronous</strong> → rule-based text only. Any LLM/network text flows through <strong>async inlays / code-vision / the outline pane</strong>, never the folding builder. Render "…" until the async result resolves, then swap.</p>
+    <h2 id="model-provider-settings">Model & provider settings</h2>
+    <p>The LLM-backed features (intent summaries, and optional polish on the polyglot lens) must work against whatever model the user has. Settings expose three fields plus a provider switch:</p>
+    <table><thead><tr><th>Field</th><th>Purpose</th><th>Example</th></tr></thead><tbody><tr><td><strong>Provider</strong></td><td>Which wire protocol to speak</td><td><code>OpenAI-compatible</code> \</td><td><code>Anthropic</code></td></tr><tr><td><strong>Base URL</strong></td><td>Endpoint</td><td><code>http://localhost:11434/v1</code> (Ollama) · <code>https://api.openai.com/v1</code> · <code>https://api.anthropic.com</code></td></tr><tr><td><strong>Model name</strong></td><td>Free-text model id</td><td><code>gpt-oss:20b</code> · <code>gpt-4o-mini</code> · <code>claude-haiku-4-5</code></td></tr><tr><td><strong>API key</strong></td><td>Auth (blank for local)</td><td>stored in the IDE's <code>PasswordSafe</code>, never in plain settings XML</td></tr></tbody></table>
+    <p><strong>Two adapters behind one interface</strong> — the protocols differ and can't share a client:</p>
+    <ul><li><strong>OpenAI-compatible</strong> → <code>POST {baseUrl}/chat/completions</code>, <code>Authorization: Bearer <key></code>, messages array, response at <code>choices[0].message.content</code>. One adapter covers <strong>OpenAI, Ollama, Groq, Together, OpenRouter, LM Studio, vLLM</strong> — anything that speaks the OpenAI shape (incl. local <code>gpt-oss</code>).</li><li><strong>Anthropic</strong> → <code>POST {baseUrl}/v1/messages</code>, <code>x-api-key: <key></code> + <code>anthropic-version</code> header, <code>system</code> sent separately, <code>max_tokens</code> required, response at <code>content[0].text</code>, model ids like <code>claude-haiku-4-5</code>.</li></ul>
+    <p>The <strong>Provider</strong> switch selects the adapter; Base URL / Model / Key are free-text so any current or future model works without a plugin update. The <strong>deterministic polyglot path needs no provider at all</strong> — it's a local lookup table — so the plugin is fully functional with zero API config; the provider only powers the LLM summaries. Ship sensible defaults (e.g. OpenAI-compatible → <code>localhost:11434/v1</code> → <code>gpt-oss:20b</code>) so a local Ollama user has nothing to configure.</p>
+    <h2 id="the-two-settings">The two settings</h2>
+    <h3 id="setting-1-verbosity-as-named-presets-not-a-continuous-slider">Setting 1 — verbosity as named presets (not a continuous slider)</h3>
+    <p>A continuous "% English" slider is unpredictable — nobody knows what 40% means. Use discrete presets that each choose <em>an experience</em>; internally each adjusts granularity depth, prose detail, and which surfaces are active:</p>
+    <table><thead><tr><th>Preset</th><th>Surfaces on</th><th>Granularity</th><th>Prose</th></tr></thead><tbody><tr><td><strong>Code</strong></td><td>folding only (or nothing)</td><td>—</td><td>none</td></tr><tr><td><strong>Hints</strong></td><td>block inlays</td><td>function / block</td><td>terse one-liners</td></tr><tr><td><strong>Outline</strong></td><td>outline pane + key inlays</td><td>file → class → function → block</td><td>summary sentences</td></tr><tr><td><strong>Reader</strong></td><td>full rendered view</td><td>down to block/line on demand</td><td>fuller narrative</td></tr></tbody></table>
+    <h3 id="setting-2-audience-profiles-the-bigger-idea">Setting 2 — audience profiles (the bigger idea)</h3>
+    <p>Everyone here is a developer (PyCharm has no non-programmers), but developers read Python for different reasons. Model each reason as a swappable profile over the same engine:</p>
+    <ul><li><strong>Intent summary</strong> (learners, onboarding to an unfamiliar/legacy repo, fast review) — block-level "what does this do" prose, LLM-heavy, higher hallucination/trust risk. <em>Not</em> an accountant tool — a reading aid for devs facing unfamiliar code.</li><li><strong>Python for JS / Java / Go / C#</strong> (polyglot developers reading Python) — explain Python-specific concepts (<code>async</code>/<code>await</code> semantics, <code>with</code> context managers, comprehensions, decorators, <code>self</code>, <code>*args</code>/<code><strong>kwargs</code>, <code>yield</code>/generators, the GIL, dunder methods, <code>:=</code>) </strong>and<strong> show the reader's-language analogy where one exists. Mostly a </strong>deterministic concept → {explanation, per-language analogy}** lookup table keyed by PSI node/pattern — low hallucination, no per-code LLM needed, concept-triggered so sparse.</li></ul>
+    <p><strong>Critical wording rule:</strong> never say "Equivalent." Python <code>async def</code> ≠ JS <code>async function</code> (different concurrency model); <code>with</code> ≈ but isn't Java try-with-resources / C# <code>using</code>; a decorator is <strong>not</strong> a Java annotation; <code>yield</code> is not "return multiple values"; <code>self</code> is explicit binding, not <code>this</code>. Label every mapping <strong>"Closest analogy / Compare to"</strong>, add a one-line lossy caveat, and attach a confidence tier. Sparse, deterministic, honest callouts read as trustworthy; chatty magic reads as a liar.</p>
+    <h2 id="the-two-profiles">The two profiles</h2>
+    <p>Both ship day one; they differ in <em>how</em> the English is produced, which drives their risk profile.</p>
+    <p><strong>Audience reality anchors both.</strong> PyCharm is a developer IDE — non-programmers never open it, so "plain English for accountants" targets a user who isn't there. Every real reader is a developer; the useful splits are all dev-shaped: polyglot devs reading Python, learners, people onboarding to unfamiliar/legacy code, and reviewers.</p>
+    <p>codex (two review rounds) rated the <strong>polyglot lens the more defensible, lower-risk half</strong> — worth leaning the marketing and QA weight toward it even though both ship together:</p>
+    <ul><li>The <strong>polyglot lens</strong> is a deterministic concept→analogy table. Polyglot devs already know control flow, types, refactoring; they need <strong>idiom translation, not magical comprehension</strong> — low hallucination, sparse, table-driven. Credible wedge: <em>"I know JS/Java/Go — help me read Python idioms in this repo."</em></li><li>The <strong>intent-summary</strong> profile is LLM-backed and carries the real risk: a general "explain what this does" promise pushes toward false confidence and <em>"impressive on small examples, brittle in real code."</em> Keep it honest with confidence tiers, stale badges, and the deterministic PSI skeleton underneath.</li></ul>
+    <p>One product, swappable profiles, both present at launch.</p>
+    <h2 id="architecture-data-flow">Architecture / data flow</h2>
+    <div class="mermaid">
+flowchart LR
+  A["Python file<br/>(unchanged on disk)"] --> B["PyCharm PSI parse<br/>com.jetbrains.python.psi"]
+  B --> C["Deterministic block detector<br/>+ rough gloss (skeleton)"]
+  C --> D{Audience profile}
+  D -->|"Python for JS/Java/Go"| E["Concept to analogy<br/>lookup table (no LLM)"]
+  D -->|"Intent summary"| F["LLM polish (async)<br/>gpt-oss-20b / Haiku 4.5"]
+  E --> G["Cache: psiHash + profile<br/>+ level + versions"]
+  F --> G
+  G --> H["Render surfaces"]
+  H --> I["Outline pane<br/>(primary, synced)"]
+  H --> J["Block inlays / Code Vision<br/>(overlay)"]
+  H --> K["Folding<br/>(tiny idioms only)"]
+  classDef file fill:#c9603a,stroke:#7a2f16,color:#fff
+  classDef psi fill:#3a6ea5,stroke:#1e3f66,color:#fff
+  classDef gen fill:#4a7c59,stroke:#274733,color:#fff
+  classDef cache fill:#b08900,stroke:#6b5200,color:#fff
+  classDef view fill:#7d5ba6,stroke:#472f63,color:#fff
+  class A file
+  class B psi
+  class C,E,F gen
+  class D,G cache
+  class H,I,J,K view
+</div>
+    <h2 id="shared-engine-swappable-profiles">Shared engine swappable profiles</h2>
+    <div class="mermaid">
+flowchart TB
+  CORE["Shared engine<br/>PSI detector + renderer + cache"]
+  P1["Profile: Intent summary<br/>(learners / onboarding / review)"]
+  P2["Profile: Python for JS/Java/Go/C#<br/>(polyglot devs) - ship first"]
+  V["Verbosity presets<br/>Code / Hints / Outline / Reader"]
+  CORE --> P1
+  CORE --> P2
+  CORE --> V
+  P1 --> OUT["English layer over the editor<br/>(editor stays source of truth)"]
+  P2 --> OUT
+  V --> OUT
+  classDef core fill:#3a6ea5,stroke:#1e3f66,color:#fff
+  classDef prof fill:#4a7c59,stroke:#274733,color:#fff
+  classDef ship fill:#c9603a,stroke:#7a2f16,color:#fff
+  classDef set fill:#b08900,stroke:#6b5200,color:#fff
+  classDef out fill:#7d5ba6,stroke:#472f63,color:#fff
+  class CORE core
+  class P1 prof
+  class P2 ship
+  class V set
+  class OUT out
+</div>
+    <h2 id="prior-art-sources">Prior art & sources</h2>
+    <ul><li><a href="https://arxiv.org/html/2408.04820v3">Google — Natural Language Outlines for Code (2024): block-level prose outlines interleaved literate-programming style; bidirectional sync; 90% of outlines rated acceptable+. The core "not per-line, use blocks" evidence.</a></li><li><a href="https://plugins.jetbrains.com/plugin/23659-advanced-java-folding-2-fork-">Advanced Java Folding 2 (Fork): the reference plugin — folding-based syntax rewrite in-editor, file unchanged. The mechanism to port.</a></li><li><a href="https://mbeddr.com/files/gemoc2014-MPSNotations.pdf">JetBrains MPS — projectional editing / diverse notations: the north-star concept (English as a notation of the AST); separate workbench, no Python.</a></li><li><a href="https://www.jetbrains.com/help/idea/reader-mode.html">IntelliJ Reader Mode / render docs in place: precedent for a toggled rendered-in-editor view.</a></li><li><a href="https://plugins.jetbrains.com/docs/intellij/folding-builder.html">IntelliJ SDK — Folding Builder</a></li><li><a href="https://plugins.jetbrains.com/docs/intellij/inlay-hints.html">IntelliJ SDK — Inlay Hints</a></li><li><a href="https://plugins.jetbrains.com/docs/intellij/pycharm.html">IntelliJ SDK — PyCharm Plugin Development</a></li><li><a href="https://github.com/JetBrains/intellij-community/blob/master/platform/editor-ui-api/src/com/intellij/openapi/editor/InlayModel.java">InlayModel (richer editor inlays)</a></li></ul>
+    <h2 id="permanently-excluded">Permanently excluded</h2>
+    <p>These stay out on scope/safety grounds regardless of the "everything day one" rule:</p>
+    <ul><li><strong>Per-line replacement</strong> — noise; use block-level outlines.</li><li><strong>Bidirectional sync</strong> (edit English → LLM rewrites Python) — footgun for a reading tool: false authority, weak auditability, silent wrong rewrites. If it's ever wanted, it must be an explicit assisted-edit → propose patch → show diff → require approval → run tests. Never silent, and out of the initial scope by design.</li><li><strong>Full custom editor / LSP</strong> — fights the platform; unnecessary for a projection.</li><li><strong>Continuous verbosity slider</strong> — named presets instead.</li><li><strong>The word "Equivalent"</strong> — use "Closest analogy" with caveats.</li></ul>
+    <h2 id="day-1-scope">Day-1 scope</h2>
+    <p>No phased MVP. The first release contains the full feature set:</p>
+    <ol><li><strong>Engine:</strong> Gradle IntelliJ Platform 2.x, <code>bundledPlugin("PythonCore")</code>, optional <code>depends</code>; PSI block detector + deterministic skeleton + normalized-PSI-hash cache (<code>{psiHash, profile, level, promptVersion, pluginVersion}</code>).</li><li><strong>Polyglot lens</strong> — concept→analogy table for <code>async</code>/<code>with</code>/comprehension/decorator/<code>self</code>/<code>*args</code>/<code>yield</code>/<code>:=</code>/dunder, with "Closest analogy" + confidence tier + lossy caveat. Target languages: JS, Java, Go, C#.</li><li><strong>Intent-summary profile</strong> — LLM block/function summaries via async inlays + outline pane, deterministic skeleton underneath, stale badge + regenerate.</li><li><strong>All three rendering surfaces</strong> — synced outline pane (primary), block inlays / Code Vision (overlay), folding (tiny idioms).</li><li><strong>Verbosity presets</strong> — Code / Hints / Outline / Reader.</li><li><strong>Provider settings</strong> — Provider (OpenAI-compatible | Anthropic) + Base URL + Model name + API key (in <code>PasswordSafe</code>); defaults to local Ollama <code>gpt-oss:20b</code>.</li><li><strong>Affordances</strong> — quick-doc hover, gutter icons (explain / cache / stale), export outline.</li></ol>
+    <p><strong>Top risks:</strong> subtly-wrong summary (trust); stale cache after edits (→ stale badge + regenerate); inlay noise; LLM latency/flicker; and provider/Ollama setup becoming the product (mitigated — the polyglot lens needs no provider, so the plugin works with zero config). The old "audience mismatch" risk is designed out — the plugin targets developers, PyCharm's only users.</p>
+  </main>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/highlight.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
+<script>
+const css = k => getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+const charts = [];
+if (window.mermaid) mermaid.initialize({startOnLoad:false});
+function mermaidConfig(){
+  return { startOnLoad:false, securityLevel:'loose', theme:'base', themeVariables:{
+    background:css('--surface'),
+    primaryColor:css('--surface-2'), primaryTextColor:css('--text'), primaryBorderColor:css('--border'),
+    secondaryColor:css('--accent-soft'), tertiaryColor:css('--bg'),
+    lineColor:css('--accent'), textColor:css('--text'),
+    fontFamily:css('--mono')||'monospace', fontSize:'14px',
+    nodeBorder:css('--border'), clusterBkg:css('--bg'), clusterBorder:css('--border'),
+    edgeLabelBackground:css('--surface')
+  }};
+}
+function renderMermaid(){
+  document.querySelectorAll('.mermaid').forEach(el=>{
+    if(el.dataset.src===undefined) el.dataset.src = el.innerHTML.replace(/<br\s*\/?>/gi,'<br/>').trim();
+    el.innerHTML = el.dataset.src; el.removeAttribute('data-processed');
+  });
+  try{ mermaid.initialize(mermaidConfig()); mermaid.run(); }catch(e){ console.warn(e); }
+}
+/* colourful ECharts — per-datum bars from the Bauhaus palette */
+function renderCharts(){
+  const ax=css('--muted'), grid=css('--border'), txt=css('--text');
+  const pal=[css('--accent'),css('--bh-blue'),css('--bh-amber'),css('--bh-green'),css('--bh-violet'),css('--accent-2')];
+  document.querySelectorAll('.chart').forEach((el,i)=>{
+    let opt; try{ opt=JSON.parse(el.dataset.opt||'{}'); }catch(e){ return; }
+    charts[i] = charts[i] || echarts.init(el, null, {renderer:'svg'});
+    const series=(opt.series||[]).map(s=> s.type==='bar' ? Object.assign({colorBy:'data',
+      itemStyle:{borderRadius:[4,4,0,0]}}, s) : s);
+    const base = {
+      color:pal, textStyle:{fontFamily:css('--mono'),color:txt},
+      grid:{left:46,right:18,top:30,bottom:30,containLabel:true},
+      tooltip:{trigger:'axis'}, legend:{textStyle:{color:ax}},
+    };
+    if(opt.xAxis) base.xAxis = Object.assign({axisLine:{lineStyle:{color:grid}},axisLabel:{color:ax},splitLine:{show:false}}, opt.xAxis);
+    if(opt.yAxis) base.yAxis = Object.assign({axisLine:{show:false},axisLabel:{color:ax},splitLine:{lineStyle:{color:grid}}}, opt.yAxis);
+    charts[i].setOption(Object.assign(base, {series, xAxis:base.xAxis||opt.xAxis, yAxis:base.yAxis||opt.yAxis, title:opt.title}), true);
+  });
+}
+function renderAll(){ renderMermaid(); renderCharts(); }
+function toggleTheme(){
+  const h=document.documentElement;
+  h.dataset.theme = h.dataset.theme==='dark' ? 'light' : 'dark';
+  document.getElementById('hljs-theme').href =
+    'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/atom-one-' + (h.dataset.theme==='dark'?'dark':'light') + '.min.css';
+  setTimeout(renderAll, 50);
+}
+function initSpy(){
+  const links=[...document.querySelectorAll('#toc a')];
+  if(!links.length) return;
+  const obs=new IntersectionObserver(es=>es.forEach(e=>{
+    if(e.isIntersecting){ links.forEach(l=>l.classList.remove('active'));
+      const a=document.querySelector('#toc a[href="#'+e.target.id+'"]'); if(a)a.classList.add('active'); }
+  }),{rootMargin:'-8% 0px -82% 0px'});
+  document.querySelectorAll('main [id]').forEach(s=>obs.observe(s));
+}
+function initProgress(){
+  const bar=document.querySelector('.progress>span'); if(!bar) return;
+  const upd=()=>{ const h=document.documentElement; const max=h.scrollHeight-h.clientHeight;
+    bar.style.width=(max>0?(h.scrollTop/max*100):0)+'%'; };
+  window.addEventListener('scroll',upd,{passive:true}); upd();
+}
+function initReadtime(){
+  const el=document.querySelector('.readtime'); if(!el) return;
+  const words=(document.querySelector('main')?.innerText||'').trim().split(/\s+/).length;
+  el.textContent='~'+Math.max(1,Math.round(words/220))+' min read · '+words.toLocaleString()+' words';
+}
+/* scroll-reveal micro-animations */
+function initReveal(){
+  if(window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const sel='main h2, main h3, main figure, main table, main .callout, main pre, main blockquote, main .cards';
+  const els=[...document.querySelectorAll(sel)];
+  els.forEach(e=>e.classList.add('reveal'));
+  const obs=new IntersectionObserver((es,o)=>es.forEach((e,i)=>{
+    if(e.isIntersecting){ e.target.style.transitionDelay=(Math.min(i,4)*60)+'ms';
+      e.target.classList.add('in'); o.unobserve(e.target); }
+  }),{rootMargin:'0px 0px -10% 0px'});
+  els.forEach(e=>obs.observe(e));
+}
+window.addEventListener('load',()=>{ hljs.highlightAll(); renderAll(); initSpy(); initProgress(); initReadtime(); initReveal(); });
+window.addEventListener('resize',()=>charts.forEach(c=>c&&c.resize()));
+</script>
+</body>
+

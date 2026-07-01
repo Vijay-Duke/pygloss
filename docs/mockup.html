@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>py-to-english — editor mockup</title>
+<style>
+  :root{
+    --bg:#1e1f22; --panel:#2b2d30; --gutter:#26282b; --border:#393b40;
+    --fg:#bcbec4; --muted:#6b6f76; --line:#2f3134;
+    --kw:#cf8e6d; --str:#6aab73; --fn:#56a8f5; --num:#2aacb8; --self:#c77dbb;
+    --eng:#a9b7c6; --engdim:#7a8593; --accent:#c9603a; --sum:#d9a441;
+    --arrow:#5a8f5f;
+    font-family:'JetBrains Mono','SF Mono',Menlo,Consolas,monospace;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font-size:13px;line-height:1.7;
+       -webkit-font-smoothing:antialiased}
+  header{padding:20px 28px 6px;border-bottom:1px solid var(--border)}
+  h1{margin:0;font-size:15px;letter-spacing:.02em;font-weight:600;color:#e6e6e6}
+  h1 .accent{color:var(--accent)}
+  .sub{color:var(--muted);font-size:12px;margin-top:4px}
+  .wrap{display:grid;grid-template-columns:1fr 1fr;gap:0;min-height:0}
+  @media(max-width:1000px){.wrap{grid-template-columns:1fr}}
+  .pane{border-right:1px solid var(--border);min-width:0}
+  .pane:last-child{border-right:none}
+  .tab{display:flex;align-items:center;gap:8px;padding:9px 16px;background:var(--panel);
+       border-bottom:1px solid var(--border);font-size:11px;color:var(--muted);
+       letter-spacing:.06em;text-transform:uppercase}
+  .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex:0 0 auto}
+  .dot.g{background:#4a7c59}.dot.b{background:#3a6ea5}
+  .code{padding:14px 0}
+  .row{display:grid;grid-template-columns:38px 1fr;min-height:23px}
+  .ln{color:var(--muted);text-align:right;padding-right:14px;user-select:none;opacity:.55;
+      background:var(--gutter)}
+  .src{padding:0 18px;white-space:pre}
+  .fold{position:relative}
+  /* folded/replaced English line */
+  .eng .src{color:var(--eng)}
+  .eng .en-w{color:var(--engdim);font-style:italic}
+  .caret{color:var(--sum);opacity:.8;margin-right:6px}
+  /* inlay line (overlay above code) */
+  .inlay .src{color:var(--arrow);font-style:italic;opacity:.85}
+  .inlay .ln{background:var(--gutter)}
+  .summary{background:#2a2b2e;border-left:2px solid var(--sum)}
+  .summary .src{color:var(--sum);font-style:italic;white-space:pre-wrap}
+  /* python token colors */
+  .kw{color:var(--kw)} .str{color:var(--str)} .fn{color:var(--fn)}
+  .num{color:var(--num)} .self{color:var(--self)} .cm{color:var(--muted);font-style:italic}
+  .legend{padding:14px 28px 26px;color:var(--muted);font-size:11.5px;
+          border-top:1px solid var(--border);line-height:1.9}
+  .legend b{color:var(--fg);font-weight:600}
+  .pill{display:inline-block;padding:1px 7px;border-radius:3px;font-size:10.5px;
+        margin-right:6px;border:1px solid var(--border)}
+  .foldicon{color:var(--muted);opacity:.6}
+</style>
+</head>
+<body>
+<header>
+  <h1>py&#8209;to&#8209;<span class="accent">english</span> &nbsp;·&nbsp; editor mockup</h1>
+  <div class="sub">Same file, same bytes on disk. Left: raw Python. Right: English view (folding + inlays). Toggle per file — never touches the file.</div>
+</header>
+
+<div class="wrap">
+  <!-- LEFT: raw python -->
+  <div class="pane">
+    <div class="tab"><span class="dot b"></span> billing.py &nbsp;—&nbsp; raw Python</div>
+    <div class="code">
+      <div class="row"><div class="ln">1</div><div class="src"><span class="kw">def</span> <span class="fn">process_invoices</span>(invoices, threshold):</div></div>
+      <div class="row"><div class="ln">2</div><div class="src">    approved = []</div></div>
+      <div class="row"><div class="ln">3</div><div class="src">    <span class="kw">for</span> inv <span class="kw">in</span> invoices:</div></div>
+      <div class="row"><div class="ln">4</div><div class="src">        <span class="kw">if</span> inv.total &gt; threshold <span class="kw">and</span> <span class="kw">not</span> inv.flagged:</div></div>
+      <div class="row"><div class="ln">5</div><div class="src">            inv.status = <span class="str">"approved"</span></div></div>
+      <div class="row"><div class="ln">6</div><div class="src">            approved.<span class="fn">append</span>(inv)</div></div>
+      <div class="row"><div class="ln">7</div><div class="src">    <span class="kw">return</span> approved</div></div>
+      <div class="row"><div class="ln">8</div><div class="src"></div></div>
+      <div class="row"><div class="ln">9</div><div class="src">totals = [x.amount * <span class="num">1.1</span> <span class="kw">for</span> x <span class="kw">in</span> rows <span class="kw">if</span> x.region == <span class="str">"AU"</span>]</div></div>
+    </div>
+  </div>
+
+  <!-- RIGHT: english view -->
+  <div class="pane">
+    <div class="tab"><span class="dot"></span> billing.py &nbsp;—&nbsp; English view</div>
+    <div class="code">
+      <!-- function-level LLM summary (block fold above the def) -->
+      <div class="row summary"><div class="ln foldicon">▸</div><div class="src">process_invoices — keep the invoices over the threshold that aren't flagged, mark each approved, and return them.</div></div>
+
+      <!-- line-by-line rule-based "replace" -->
+      <div class="row eng"><div class="ln">1</div><div class="src"><span class="caret">▾</span><span class="en-w">define</span> process_invoices <span class="en-w">taking</span> invoices, threshold:</div></div>
+      <div class="row eng"><div class="ln">2</div><div class="src">    <span class="en-w">start an empty list</span> approved</div></div>
+      <div class="row eng"><div class="ln">3</div><div class="src">    <span class="en-w">for each</span> inv <span class="en-w">in</span> invoices:</div></div>
+      <div class="row eng"><div class="ln">4</div><div class="src">        <span class="en-w">if</span> inv's total <span class="en-w">is over</span> threshold <span class="en-w">and</span> inv <span class="en-w">is not</span> flagged:</div></div>
+      <div class="row eng"><div class="ln">5</div><div class="src">            <span class="en-w">set</span> inv's status <span class="en-w">to</span> "approved"</div></div>
+      <div class="row eng"><div class="ln">6</div><div class="src">            <span class="en-w">add</span> inv <span class="en-w">to</span> approved</div></div>
+      <div class="row eng"><div class="ln">7</div><div class="src">    <span class="en-w">give back</span> approved</div></div>
+      <div class="row"><div class="ln">8</div><div class="src"></div></div>
+
+      <!-- comprehension replaced -->
+      <div class="row eng"><div class="ln">9</div><div class="src">totals = <span class="en-w">the list of</span> each row's amount &times; <span class="num">1.1</span>, <span class="en-w">for every</span> row <span class="en-w">where</span> region <span class="en-w">is</span> "AU"</div></div>
+    </div>
+  </div>
+</div>
+
+<div class="legend">
+  <div><span class="pill" style="border-color:var(--sum);color:var(--sum)">▸ summary</span> <b>Block fold, LLM-generated</b> — one plain-English sentence per function. The part a non-Python dev actually reads. Async, cached by PSI hash.</div>
+  <div><span class="pill" style="border-color:var(--engdim);color:var(--eng)">line English</span> <b>Line folds, rule-based</b> — deterministic templates per PSI node (for / if / return / comprehension). Instant, offline.</div>
+  <div><span class="pill" style="border-color:var(--arrow);color:var(--arrow)">⟿ inlay</span> <b>Overlay mode (alt.)</b> — keeps the real code, floats English above each block instead of replacing. Same data, different toggle.</div>
+  <div style="margin-top:8px;color:var(--muted)">Click the <span style="color:var(--sum)">▾/▸</span> gutter caret to expand any line back to real Python. File on disk is unchanged throughout.</div>
+</div>
+</body>
+</html>

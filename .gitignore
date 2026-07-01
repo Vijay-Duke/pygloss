@@ -1,0 +1,5 @@
+.pi-reports/
+.gradle/
+build/
+*.iml
+.idea/
