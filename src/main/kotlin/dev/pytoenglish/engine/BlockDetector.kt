@@ -26,6 +26,10 @@ object BlockDetector {
 
     /** Detect semantic blocks in a Python file without modifying the document. */
     fun detect(file: PyFile): EnglishModel {
+        return withPsiReadAccess { detectInReadAction(file) }
+    }
+
+    private fun detectInReadAction(file: PyFile): EnglishModel {
         val context = DetectionContext()
         val blocks = collectChildBlocks(file, context)
         return EnglishModel(

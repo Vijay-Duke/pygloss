@@ -6,6 +6,8 @@ import com.intellij.codeInsight.hints.declarative.InlayPayload
 import com.intellij.codeInsight.hints.declarative.InlayHintsProvider
 import com.intellij.codeInsight.hints.declarative.InlayTreeSink
 import com.intellij.codeInsight.hints.declarative.SharedBypassCollector
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.DumbAware
 import com.intellij.psi.PsiElement
@@ -37,17 +39,18 @@ class PyEnglishInlayProvider : InlayHintsProvider, DumbAware {
         if (preset == VerbosityLevel.CODE) return null
 
         val settings = InlayOverlaySettings(
-            profile = Profile.POLYGLOT_LENS,
+            profile = OutlinePreferences.profile,
             targetLanguage = OutlinePreferences.targetLanguage,
             preset = preset
         )
         val model = EnglishModelService.getInstance(file.project).getModel(file, settings.profile, settings.preset)
-        val hintsByOffset = U6OverlayProjection.conceptCallouts(model, settings).groupBy { it.offset }
+        val hintsByOffset = U6OverlayProjection.editorInlays(model, settings).groupBy { it.offset }
 
         return object : SharedBypassCollector {
             override fun collectFromElement(element: PsiElement, sink: InlayTreeSink) {
                 if (!isAnchorElement(element)) return
-                val inlays = hintsByOffset[element.textRange.startOffset].orEmpty()
+                val offset = readPsi { element.textRange.startOffset }
+                val inlays = hintsByOffset[offset].orEmpty()
                 for (inlay in inlays) {
                     sink.addPresentation(
                         position = InlineInlayPosition(inlay.offset, relatedToPrevious = false),
@@ -107,6 +110,15 @@ data class OverlayInlay(
 /** Pure projection helpers shared by production renderers and headless tests. */
 object U6OverlayProjection {
 
+    /** Return all editor inlays needed to keep ordinary Python visibly annotated without LLM output. */
+    fun editorInlays(model: EnglishModel, settings: InlayOverlaySettings): List<OverlayInlay> {
+        if (settings.preset == VerbosityLevel.CODE) return emptyList()
+        return when (settings.profile) {
+            Profile.POLYGLOT_LENS -> blockSummaries(model, settings) + conceptCallouts(model, settings)
+            Profile.INTENT_SUMMARY -> blockSummaries(model, settings)
+        }
+    }
+
     /** Return concept callouts visible for [settings]. */
     fun conceptCallouts(model: EnglishModel, settings: InlayOverlaySettings): List<OverlayInlay> {
         if (settings.preset == VerbosityLevel.CODE) return emptyList()
@@ -160,4 +172,9 @@ object U6OverlayProjection {
     private fun walk(block: EnglishBlock): List<EnglishBlock> {
         return listOf(block) + block.children.flatMap(::walk)
     }
+}
+
+private fun <T> readPsi(action: () -> T): T {
+    val application = ApplicationManager.getApplication()
+    return if (application.isReadAccessAllowed) action() else ReadAction.compute<T, RuntimeException> { action() }
 }

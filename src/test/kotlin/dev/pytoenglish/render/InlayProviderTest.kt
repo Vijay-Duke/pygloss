@@ -98,6 +98,44 @@ class InlayProviderTest : BasePlatformTestCase() {
         )
     }
 
+    fun testPlainFunctionProducesDeterministicEditorInlayWithoutLlmOrConcepts() {
+        val model = detect(
+            """
+            def f(*, raw):
+                try:
+                    return raw.strip()
+                except AttributeError:
+                    return ""
+            """.trimIndent()
+        )
+
+        val function = model.blocks.single { it.stableId == "module/function:f" }
+        assertTrue("Fixture should have no deterministic concept callouts", function.concepts.isEmpty())
+
+        val inlays = U6OverlayProjection.editorInlays(
+            model,
+            InlayOverlaySettings(Profile.POLYGLOT_LENS, "JS", VerbosityLevel.HINTS)
+        )
+
+        assertNotNull(inlays.singleOrNull {
+            it.offset == function.anchorOffset && it.text == "function: f" && it.isSummary
+        })
+    }
+
+    fun testIntentSummaryEditorInlayUsesPendingPlaceholderWithoutSummary() {
+        val model = detect("def plain(value):\n    return value\n")
+        val function = model.blocks.single()
+
+        val inlays = U6OverlayProjection.editorInlays(
+            model,
+            InlayOverlaySettings(Profile.INTENT_SUMMARY, "JS", VerbosityLevel.HINTS)
+        )
+
+        assertNotNull(inlays.singleOrNull {
+            it.offset == function.anchorOffset && it.text == CodeVisionAdapter.PLACEHOLDER_PENDING && it.isSummary
+        })
+    }
+
     private fun detect(code: String): EnglishModel {
         val file = myFixture.configureByText("inlay_fixture.py", code) as PyFile
         return BlockDetector.detect(file)

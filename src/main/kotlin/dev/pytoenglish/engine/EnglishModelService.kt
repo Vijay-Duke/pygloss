@@ -25,6 +25,7 @@ import dev.pytoenglish.settings.SecretStore
 class EnglishModelService(private val project: Project) {
 
     private val cacheService: ModelCacheService get() = ModelCacheService.getInstance(project)
+    private val lookupLock = Any()
     private val lastFileLookups = mutableMapOf<FileLookupKey, FileLookupValue>()
     private var activePipeline: IntentSummaryPipeline? = null
 
@@ -34,12 +35,20 @@ class EnglishModelService(private val project: Project) {
         profile: Profile = Profile.POLYGLOT_LENS,
         level: VerbosityLevel = VerbosityLevel.HINTS
     ): EnglishModel {
+        return withPsiReadAccess { getModelInReadAction(file, profile, level) }
+    }
+
+    private fun getModelInReadAction(
+        file: PyFile,
+        profile: Profile,
+        level: VerbosityLevel
+    ): EnglishModel {
         cacheService.processInvalidation()
 
         val fileId = file.virtualFile?.path ?: file.name
         val lookupKey = FileLookupKey(fileId, profile, level)
         val modificationCount = currentPsiModificationCount()
-        lastFileLookups[lookupKey]?.let { previous ->
+        synchronized(lookupLock) { lastFileLookups[lookupKey] }?.let { previous ->
             if (previous.modificationCount == modificationCount) {
                 cacheService.get(previous.cacheKey)?.let { return projectSummaries(it, profile) }
             }
@@ -48,14 +57,16 @@ class EnglishModelService(private val project: Project) {
         val currentModel = BlockDetector.detect(file)
         val normalizedHash = modelHash(currentModel)
         val cacheKey = cacheService.keyFor(normalizedHash, profile, level)
-        lastFileLookups[lookupKey] = FileLookupValue(modificationCount, cacheKey)
+        synchronized(lookupLock) {
+            lastFileLookups[lookupKey] = FileLookupValue(modificationCount, cacheKey)
+        }
 
         return projectSummaries(cacheService.getOrBuild(cacheKey) { currentModel }, profile)
     }
 
     /** Build a fresh deterministic model without consulting the cache. */
     fun buildFresh(file: PyFile): EnglishModel {
-        return BlockDetector.detect(file)
+        return withPsiReadAccess { BlockDetector.detect(file) }
     }
 
     /** Enrich the model with LLM summaries. Kicks off async pipeline if [adapter] is provided. */

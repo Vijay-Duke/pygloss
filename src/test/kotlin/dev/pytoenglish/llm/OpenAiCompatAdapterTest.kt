@@ -51,6 +51,19 @@ class OpenAiCompatAdapterTest {
         assertTrue("Body contains prompt text", body.contains("explain this"))
     }
 
+    @Test
+    fun `max_tokens is present in request body`() {
+        var captured: HttpRequest? = null
+        val mock = HttpClient { req ->
+            captured = req
+            HttpResponse(200, """{"choices":[{"message":{"content":"ok"}}]}""")
+        }
+        val adapter = OpenAiCompatAdapter(defaultSettings, mock)
+        adapter.summarize(LlmRequest(prompt = "test", maxTokens = 8))
+
+        assertTrue("Body contains max_tokens", captured!!.body.contains(""""max_tokens":8"""))
+    }
+
     // ---- successful response parsing ----
 
     @Test

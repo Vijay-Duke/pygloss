@@ -12,6 +12,8 @@ import com.intellij.codeInsight.hints.InlayHintsSink
 import com.intellij.codeInsight.hints.NoSettings
 import com.intellij.codeInsight.hints.SettingsKey
 import com.intellij.codeInsight.hints.codeVision.DaemonBoundCodeVisionProvider
+import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.project.DumbAware
 import com.intellij.openapi.util.TextRange
@@ -122,7 +124,7 @@ class BlockInlayFallbackProvider : InlayHintsProvider<NoSettings>, DumbAware {
     ) : FactoryInlayHintsCollector(editor) {
 
         override fun collect(element: PsiElement, editor: Editor, sink: InlayHintsSink): Boolean {
-            val offset = element.textRange.startOffset
+            val offset = readPsi { element.textRange.startOffset }
             val inlays = summaries[offset].orEmpty()
             for (inlay in inlays) {
                 sink.addBlockElement(
@@ -136,4 +138,9 @@ class BlockInlayFallbackProvider : InlayHintsProvider<NoSettings>, DumbAware {
             return true
         }
     }
+}
+
+private fun <T> readPsi(action: () -> T): T {
+    val application = ApplicationManager.getApplication()
+    return if (application.isReadAccessAllowed) action() else ReadAction.compute<T, RuntimeException> { action() }
 }

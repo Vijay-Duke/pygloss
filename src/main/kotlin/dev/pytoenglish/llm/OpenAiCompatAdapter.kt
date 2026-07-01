@@ -53,7 +53,7 @@ class OpenAiCompatAdapter(
             append("""{"role":"user","content":${JsonSupport.quote(request.prompt)}}""")
             append("]")
         }
-        return """{"model":${JsonSupport.quote(settings.model)},"messages":$messages}"""
+        return """{"model":${JsonSupport.quote(settings.model)},"max_tokens":${request.maxTokens},"messages":$messages}"""
     }
 
     private fun parseSuccess(body: String): LlmResult {

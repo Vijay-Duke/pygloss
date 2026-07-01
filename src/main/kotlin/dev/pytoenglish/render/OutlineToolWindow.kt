@@ -3,6 +3,8 @@ package dev.pytoenglish.render
 import com.intellij.ide.util.PropertiesComponent
 import com.intellij.openapi.Disposable
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ModalityState
+import com.intellij.openapi.application.ReadAction
 import com.intellij.openapi.editor.Caret
 import com.intellij.openapi.editor.Editor
 import com.intellij.openapi.editor.event.CaretEvent
@@ -43,6 +45,8 @@ import javax.swing.event.TreeSelectionListener
 import javax.swing.tree.DefaultMutableTreeNode
 import javax.swing.tree.DefaultTreeModel
 import javax.swing.tree.TreePath
+import com.intellij.util.concurrency.AppExecutorUtil
+import java.util.concurrent.atomic.AtomicLong
 
 /** Tool window panel that projects the current Python file's English outline. */
 class OutlineToolWindow(private val project: Project) : Disposable {
@@ -62,6 +66,7 @@ class OutlineToolWindow(private val project: Project) : Disposable {
     private var currentEditor: Editor? = null
     private var ignoreSelection = false
     private var disposed = false
+    private val refreshGeneration = AtomicLong()
 
     /** Root Swing component shown inside the tool window. */
     val component: JComponent = JPanel(BorderLayout()).apply {
@@ -194,9 +199,9 @@ class OutlineToolWindow(private val project: Project) : Disposable {
 
     private fun refresh() {
         val editor = FileEditorManager.getInstance(project).selectedTextEditor
-        val pyFile = editor?.pythonFile()
+        val generation = refreshGeneration.incrementAndGet()
         currentEditor = editor
-        if (pyFile == null) {
+        if (editor == null) {
             currentModel = null
             renderNodes(emptyList())
             detailArea.text = "Open a Python file to view its outline."
@@ -205,7 +210,29 @@ class OutlineToolWindow(private val project: Project) : Disposable {
         }
 
         val settings = outlineSettings()
-        val model = modelService.getModel(pyFile, settings.profile, settings.preset)
+        ReadAction
+            .nonBlocking<Pair<PyFile, EnglishModel>?> {
+                val pyFile = editor.pythonFile() ?: return@nonBlocking null
+                pyFile to modelService.getModel(pyFile, settings.profile, settings.preset)
+            }
+            .expireWith(this)
+            .finishOnUiThread(ModalityState.defaultModalityState()) { result ->
+                if (disposed || generation != refreshGeneration.get()) return@finishOnUiThread
+                if (result == null) {
+                    currentModel = null
+                    renderNodes(emptyList())
+                    detailArea.text = "Open a Python file to view its outline."
+                    updateControlState()
+                    return@finishOnUiThread
+                }
+                val (pyFile, model) = result
+                updateOutline(editor, pyFile, model, settings)
+            }
+            .submit(AppExecutorUtil.getAppExecutorService())
+    }
+
+    private fun updateOutline(editor: Editor, pyFile: PyFile, model: EnglishModel, settings: OutlineSettings) {
+        if (pyFile.project.isDisposed) return
         currentModel = model
         renderNodes(OutlineModelBuilder.build(model, settings, cacheService::isStale))
         syncCaretSelection(editor.caretModel.currentCaret)

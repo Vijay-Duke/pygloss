@@ -1,6 +1,7 @@
 package dev.pytoenglish.cache
 
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
+import com.intellij.util.concurrency.AppExecutorUtil
 import com.jetbrains.python.psi.PyFile
 import dev.pytoenglish.engine.BlockDetector
 import dev.pytoenglish.engine.EnglishModelService
@@ -9,6 +10,7 @@ import dev.pytoenglish.model.EnglishBlock
 import dev.pytoenglish.model.EnglishModel
 import java.io.File
 import java.nio.file.Files
+import java.util.concurrent.TimeUnit
 
 /** Tests for [ModelCacheService] cache hit/miss, invalidation, eviction, and stale tracking. */
 class ModelCacheServiceTest : BasePlatformTestCase() {
@@ -344,6 +346,16 @@ class ModelCacheServiceTest : BasePlatformTestCase() {
 
         cache.clearCache()
         assertEquals("Cache should be empty after clear", 0, cache.cacheSize())
+    }
+
+    fun testModelServiceWrapsPsiReadsForCallersWithoutExplicitReadAction() {
+        val file = configureAndGet("def f():\n    return 1\n")
+        val future = AppExecutorUtil.getAppExecutorService().submit<EnglishModel> {
+            EnglishModelService.getInstance(project).getModel(file)
+        }
+        val model = future.get(10, TimeUnit.SECONDS)
+
+        assertEquals("module/function:f", model.blocks.single().stableId)
     }
 
     // ---- Test: Multiple blocks with independent staleness ----

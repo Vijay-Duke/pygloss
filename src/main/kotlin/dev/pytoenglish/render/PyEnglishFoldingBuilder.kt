@@ -14,6 +14,7 @@ import com.jetbrains.python.psi.PyFile
 import com.jetbrains.python.psi.PyIfStatement
 import com.jetbrains.python.psi.PyReturnStatement
 import dev.pytoenglish.engine.BlockDetector
+import dev.pytoenglish.engine.withPsiReadAccess
 import dev.pytoenglish.model.BlockKind
 import dev.pytoenglish.model.EnglishBlock
 
@@ -23,6 +24,10 @@ class PyEnglishFoldingBuilder(
 ) : FoldingBuilderEx(), DumbAware {
 
     override fun buildFoldRegions(root: PsiElement, document: Document, quick: Boolean): Array<FoldingDescriptor> {
+        return withPsiReadAccess { buildFoldRegionsInReadAction(root) }
+    }
+
+    private fun buildFoldRegionsInReadAction(root: PsiElement): Array<FoldingDescriptor> {
         val file = root as? PyFile ?: return emptyArray()
         val preset = presetProvider()
         if (!preset.showsEnglishFolds) return emptyArray()
@@ -42,7 +47,7 @@ class PyEnglishFoldingBuilder(
     }
 
     override fun getPlaceholderText(node: ASTNode): String {
-        return placeholderFor(node.psi) ?: "python idiom"
+        return withPsiReadAccess { placeholderFor(node.psi) ?: "python idiom" }
     }
 
     override fun isCollapsedByDefault(node: ASTNode): Boolean {

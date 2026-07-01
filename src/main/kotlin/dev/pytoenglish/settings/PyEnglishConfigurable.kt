@@ -2,6 +2,7 @@ package dev.pytoenglish.settings
 
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.application.ApplicationManager
+import com.intellij.openapi.application.ModalityState
 import com.intellij.openapi.options.Configurable
 import com.intellij.openapi.ui.ComboBox
 import com.intellij.ui.JBColor
@@ -22,6 +23,7 @@ import dev.pytoenglish.render.OutlinePreferences
 import java.awt.BorderLayout
 import java.awt.Component
 import java.awt.FlowLayout
+import java.time.Duration
 import javax.swing.JButton
 import javax.swing.JComponent
 import javax.swing.JList
@@ -119,7 +121,7 @@ class PyEnglishConfigurable : Configurable {
         presetCombo.selectedItem = OutlinePreferences.preset
         resultLabel.isVisible = false
         SecretStore.getInstance().getApiKeyAsync { key ->
-            ApplicationManager.getApplication().invokeLater {
+            invokeInSettingsDialog {
                 loadedApiKey = key
                 apiKeyField.text = key
             }
@@ -143,8 +145,8 @@ class PyEnglishConfigurable : Configurable {
         testButton.isEnabled = false
         showResult(null, "Testing…")
         ApplicationManager.getApplication().executeOnPooledThread {
-            val result = adapter.summarize(LlmRequest(prompt = "Reply with OK."))
-            ApplicationManager.getApplication().invokeLater {
+            val result = adapter.summarize(LlmRequest(prompt = "Reply with OK.", maxTokens = 8))
+            invokeInSettingsDialog {
                 testButton.isEnabled = true
                 when (result) {
                     is LlmResult.Success -> showResult(true, "Connection succeeded")
@@ -156,6 +158,13 @@ class PyEnglishConfigurable : Configurable {
                 }
             }
         }
+    }
+
+    private fun invokeInSettingsDialog(action: () -> Unit) {
+        ApplicationManager.getApplication().invokeLater(
+            Runnable { action() },
+            ModalityState.any()
+        )
     }
 
     /** Render the inline result marker: green check on success, red cross on failure, plain text while testing. */
@@ -175,10 +184,10 @@ class PyEnglishConfigurable : Configurable {
     }
 
     private fun buildAdapter(provider: ProviderType, snapshot: SettingsSnapshot): LlmAdapter {
-        val httpClient = JdkHttpClient()
+        val httpClient = JdkHttpClient(TEST_CONNECTION_TIMEOUT)
         return when (provider) {
-            ProviderType.OPENAI_COMPAT -> OpenAiCompatAdapter(snapshot, httpClient)
-            ProviderType.ANTHROPIC -> AnthropicAdapter(snapshot, httpClient)
+            ProviderType.OPENAI_COMPAT -> OpenAiCompatAdapter(snapshot, httpClient, TEST_CONNECTION_TIMEOUT, maxAttempts = 1)
+            ProviderType.ANTHROPIC -> AnthropicAdapter(snapshot, httpClient, TEST_CONNECTION_TIMEOUT, maxAttempts = 1)
         }
     }
 
@@ -204,4 +213,8 @@ class PyEnglishConfigurable : Configurable {
                 }
             } as Component
         }
+
+    private companion object {
+        val TEST_CONNECTION_TIMEOUT: Duration = Duration.ofSeconds(10)
+    }
 }
