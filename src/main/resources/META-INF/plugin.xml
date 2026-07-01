@@ -10,8 +10,12 @@
         over Python source without modifying the file.
     ]]></description>
 
-    <depends>com.intellij.modules.platform</depends>
-    <depends config-file="python-features.xml">com.intellij.modules.python</depends>
+    <!-- Hard dependency on the Python module (always present in PyCharm) -->
+    <depends>com.intellij.modules.python</depends>
+
+    <!-- Optional dependency on PythonCore plugin for more precise integrations;
+         without it, features degrade gracefully via python-features.xml. -->
+    <depends optional="true" config-file="python-features.xml">PythonCore</depends>
 
     <extensions defaultExtensionNs="com.intellij">
         <applicationConfigurable
