@@ -24,5 +24,6 @@
             id="dev.pytoenglish.settings"
             displayName="py-to-english"/>
         <lang.foldingBuilder language="Python" implementationClass="dev.pytoenglish.render.PyEnglishFoldingBuilder"/>
+        <toolWindow id="py-to-english" anchor="right" factoryClass="dev.pytoenglish.render.OutlineToolWindowFactory"/>
     </extensions>
 </idea-plugin>
