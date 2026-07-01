@@ -23,5 +23,6 @@
             instance="dev.pytoenglish.settings.PyEnglishConfigurable"
             id="dev.pytoenglish.settings"
             displayName="py-to-english"/>
+        <lang.foldingBuilder language="Python" implementationClass="dev.pytoenglish.render.PyEnglishFoldingBuilder"/>
     </extensions>
 </idea-plugin>
