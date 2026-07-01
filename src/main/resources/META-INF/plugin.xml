@@ -20,7 +20,7 @@
     <extensions defaultExtensionNs="com.intellij">
         <applicationConfigurable
             parentId="tools"
-            instance="dev.pytoenglish.settings.PlaceholderConfigurable"
+            instance="dev.pytoenglish.settings.PyEnglishConfigurable"
             id="dev.pytoenglish.settings"
             displayName="py-to-english"/>
     </extensions>
