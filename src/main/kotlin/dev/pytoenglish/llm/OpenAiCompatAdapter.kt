@@ -1,5 +1,6 @@
 package dev.pytoenglish.llm
 
+import com.google.gson.stream.JsonToken
 import org.jetbrains.io.JsonReaderEx
 import java.io.IOException
 import java.net.ConnectException
@@ -73,17 +74,28 @@ internal sealed interface HttpOutcome {
 }
 
 internal object HttpRunner {
+    private const val NETWORK_RETRY_BACKOFF_MILLIS = 300L
+
     fun executeWithRetry(
         httpClient: HttpClient,
         request: HttpRequest,
         timeout: Duration,
         maxAttempts: Int,
     ): HttpOutcome {
-        repeat(maxAttempts.coerceAtLeast(1)) { attempt ->
+        val attempts = maxAttempts.coerceAtLeast(1)
+        repeat(attempts) { attempt ->
             when (val outcome = executeOnce(httpClient, request, timeout)) {
                 is HttpOutcome.Response -> return outcome
                 HttpOutcome.Timeout -> return HttpOutcome.Timeout
-                HttpOutcome.Network -> if (attempt == maxAttempts.coerceAtLeast(1) - 1) return HttpOutcome.Network
+                HttpOutcome.Network -> {
+                    if (attempt == attempts - 1) return HttpOutcome.Network
+                    try {
+                        Thread.sleep(NETWORK_RETRY_BACKOFF_MILLIS)
+                    } catch (_: InterruptedException) {
+                        Thread.currentThread().interrupt()
+                        return HttpOutcome.Network
+                    }
+                }
             }
         }
         return HttpOutcome.Network
@@ -156,19 +168,7 @@ internal object JsonSupport {
         reader.beginObject()
         while (reader.hasNext()) {
             when (reader.nextName()) {
-                "content" -> {
-                    reader.beginArray()
-                    if (!reader.hasNext()) return@readJson null
-                    reader.beginObject()
-                    while (reader.hasNext()) {
-                        when (reader.nextName()) {
-                            "text" -> return@readJson reader.nextString()
-                            else -> reader.skipValue()
-                        }
-                    }
-                    reader.endObject()
-                    reader.endArray()
-                }
+                "content" -> return@readJson anthropicTextContent(reader)
                 else -> reader.skipValue()
             }
         }
@@ -176,14 +176,95 @@ internal object JsonSupport {
     }
 
     private fun messageContent(reader: JsonReaderEx): String? {
+        var content: String? = null
+        var reasoning: String? = null
+
         reader.beginObject()
         while (reader.hasNext()) {
             when (reader.nextName()) {
-                "content" -> return reader.nextString()
+                "content" -> content = reader.nextNullableJsonString()
+                "reasoning" -> reasoning = reader.nextNullableJsonString()
                 else -> reader.skipValue()
             }
         }
-        return null
+        reader.endObject()
+
+        return content.takeUnlessNullOrBlank() ?: reasoning.takeUnlessNullOrBlank()
+    }
+
+    private fun anthropicTextContent(reader: JsonReaderEx): String? {
+        if (reader.peek() == JsonToken.NULL) {
+            reader.nextNull()
+            return null
+        }
+        if (reader.peek() != JsonToken.BEGIN_ARRAY) {
+            reader.skipValue()
+            return null
+        }
+
+        var fallbackText: String? = null
+        reader.beginArray()
+        while (reader.hasNext()) {
+            if (reader.peek() != JsonToken.BEGIN_OBJECT) {
+                reader.skipValue()
+                continue
+            }
+
+            val block = anthropicContentBlock(reader)
+            if (block.type == "text" && block.text.isNotNullOrBlank()) {
+                return block.text
+            }
+            if (fallbackText == null && block.text.isNotNullOrBlank()) {
+                fallbackText = block.text
+            }
+        }
+        reader.endArray()
+
+        return fallbackText
+    }
+
+    private fun anthropicContentBlock(reader: JsonReaderEx): AnthropicContentBlock {
+        var type: String? = null
+        var text: String? = null
+
+        reader.beginObject()
+        while (reader.hasNext()) {
+            when (reader.nextName()) {
+                "type" -> type = reader.nextNullableJsonString()
+                "text" -> text = reader.nextNullableJsonString()
+                else -> reader.skipValue()
+            }
+        }
+        reader.endObject()
+
+        return AnthropicContentBlock(type, text)
+    }
+
+    private data class AnthropicContentBlock(
+        val type: String?,
+        val text: String?,
+    )
+
+    private fun JsonReaderEx.nextNullableJsonString(): String? {
+        return when (peek()) {
+            JsonToken.NULL -> {
+                nextNull()
+                null
+            }
+            JsonToken.STRING -> nextString()
+            else -> {
+                skipValue()
+                null
+            }
+        }
+    }
+
+    private fun String?.takeUnlessNullOrBlank(): String? {
+        return takeIf { it.isNotNullOrBlank() }
+    }
+
+    private fun String?.isNotNullOrBlank(): Boolean {
+        return this != null && isNotBlank()
     }
 
     private fun <T> readJson(body: String, block: (JsonReaderEx) -> T?): T? {

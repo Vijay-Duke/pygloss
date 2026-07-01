@@ -78,6 +78,30 @@ class OpenAiCompatAdapterTest {
         assertEquals("The answer is 42.", (result as LlmResult.Success).text)
     }
 
+    @Test
+    fun `falls back to reasoning when message content is null`() {
+        val mock = HttpClient {
+            HttpResponse(200, """{"choices":[{"message":{"content":null,"reasoning":"Reasoning-only answer."}}]}""")
+        }
+        val adapter = OpenAiCompatAdapter(defaultSettings, mock)
+        val result = adapter.summarize(LlmRequest(prompt = "what is it"))
+
+        assertTrue("Result is Success", result is LlmResult.Success)
+        assertEquals("Reasoning-only answer.", (result as LlmResult.Success).text)
+    }
+
+    @Test
+    fun `keeps message content when reasoning is also present`() {
+        val mock = HttpClient {
+            HttpResponse(200, """{"choices":[{"message":{"content":"Visible answer.","reasoning":"Hidden reasoning."}}]}""")
+        }
+        val adapter = OpenAiCompatAdapter(defaultSettings, mock)
+        val result = adapter.summarize(LlmRequest(prompt = "what is it"))
+
+        assertTrue("Result is Success", result is LlmResult.Success)
+        assertEquals("Visible answer.", (result as LlmResult.Success).text)
+    }
+
     // ---- error paths ----
 
     @Test
@@ -105,11 +129,24 @@ class OpenAiCompatAdapterTest {
     }
 
     @Test
+    fun `200 response without content or reasoning returns ParseError`() {
+        val mock = HttpClient { HttpResponse(200, """{"error":{"message":"temporary overload"}}""") }
+        val adapter = OpenAiCompatAdapter(defaultSettings, mock)
+        val result = adapter.summarize(LlmRequest(prompt = "test"))
+        assertEquals(LlmResult.ParseError, result)
+    }
+
+    @Test
     fun `429 response returns RateLimited`() {
-        val mock = HttpClient { HttpResponse(429, """{"error":"rate limited"}""") }
+        var callCount = 0
+        val mock = HttpClient {
+            callCount += 1
+            HttpResponse(429, """{"error":"rate limited"}""")
+        }
         val adapter = OpenAiCompatAdapter(defaultSettings, mock)
         val result = adapter.summarize(LlmRequest(prompt = "test"))
         assertEquals(LlmResult.RateLimited, result)
+        assertEquals(1, callCount)
     }
 
     @Test

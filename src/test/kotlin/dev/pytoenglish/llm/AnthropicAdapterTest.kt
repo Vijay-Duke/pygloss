@@ -78,6 +78,21 @@ class AnthropicAdapterTest {
         assertEquals("Here is the summary.", (result as LlmResult.Success).text)
     }
 
+    @Test
+    fun `parses first text block after thinking block`() {
+        val mock = HttpClient {
+            HttpResponse(
+                200,
+                """{"content":[{"type":"thinking","thinking":"Internal notes."},{"type":"text","text":"Here is the answer."}]}""",
+            )
+        }
+        val adapter = AnthropicAdapter(defaultSettings, mock)
+        val result = adapter.summarize(LlmRequest(prompt = "summarize"))
+
+        assertTrue("Result is Success", result is LlmResult.Success)
+        assertEquals("Here is the answer.", (result as LlmResult.Success).text)
+    }
+
     // ---- error paths ----
 
     @Test
