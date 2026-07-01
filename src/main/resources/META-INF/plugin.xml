@@ -24,6 +24,17 @@
             id="dev.pytoenglish.settings"
             displayName="py-to-english"/>
         <lang.foldingBuilder language="Python" implementationClass="dev.pytoenglish.render.PyEnglishFoldingBuilder"/>
+        <codeInsight.declarativeInlayProvider
+            language="Python"
+            implementationClass="dev.pytoenglish.render.PyEnglishInlayProvider"
+            providerId="dev.pytoenglish.conceptCallouts"
+            isEnabledByDefault="true"/>
+        <codeInsight.daemonBoundCodeVisionProvider implementation="dev.pytoenglish.render.CodeVisionAdapter"/>
+        <codeInsight.inlayProvider
+            language="Python"
+            implementationClass="dev.pytoenglish.render.BlockInlayFallbackProvider"
+            settingsKeyId="dev.pytoenglish.blockSummaries"
+            isEnabledByDefault="true"/>
         <toolWindow id="py-to-english" anchor="right" factoryClass="dev.pytoenglish.render.OutlineToolWindowFactory"/>
     </extensions>
 </idea-plugin>
