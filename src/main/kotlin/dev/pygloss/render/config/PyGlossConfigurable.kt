@@ -20,7 +20,7 @@ import dev.pygloss.llm.LlmRequest
 import dev.pygloss.llm.LlmResult
 import dev.pygloss.llm.OpenAiCompatAdapter
 import dev.pygloss.llm.SettingsSnapshot
-import dev.pygloss.render.OutlinePreferences
+import dev.pygloss.render.EditorPreferences
 import dev.pygloss.settings.ProviderType
 import dev.pygloss.settings.PyGlossSettings
 import dev.pygloss.settings.SecretStore
@@ -37,8 +37,7 @@ import javax.swing.ListCellRenderer
 
 /**
  * Settings UI for PyGloss: provider configuration (R8) plus the reader
- * profile / target language / verbosity preset defaults (R7) mirrored from the
- * outline tool window (both share [OutlinePreferences]).
+ * profile / target language / verbosity preset defaults used by in-editor rendering.
  */
 class PyGlossConfigurable : Configurable {
 
@@ -50,7 +49,7 @@ class PyGlossConfigurable : Configurable {
     private val resultLabel = JBLabel().apply { isVisible = false }
 
     private val profileCombo = ComboBox(Profile.entries.toTypedArray()).apply { renderer = labelRenderer(::profileLabel) }
-    private val languageCombo = ComboBox(OutlinePreferences.targetLanguages.toTypedArray())
+    private val languageCombo = ComboBox(EditorPreferences.targetLanguages.toTypedArray())
     private val presetCombo = ComboBox(VerbosityLevel.entries.toTypedArray()).apply { renderer = labelRenderer(::presetLabel) }
 
     private var mainPanel: JPanel? = null
@@ -104,9 +103,9 @@ class PyGlossConfigurable : Configurable {
             baseUrlField.text != settings.baseUrl ||
             modelField.text != settings.model ||
             String(apiKeyField.password) != loadedApiKey ||
-            profileCombo.selectedItem != OutlinePreferences.profile ||
-            languageCombo.selectedItem != OutlinePreferences.targetLanguage ||
-            presetCombo.selectedItem != OutlinePreferences.preset
+            profileCombo.selectedItem != EditorPreferences.profile ||
+            languageCombo.selectedItem != EditorPreferences.targetLanguage ||
+            presetCombo.selectedItem != EditorPreferences.preset
     }
 
     override fun apply() {
@@ -127,7 +126,7 @@ class PyGlossConfigurable : Configurable {
             loadedApiKey = apiKey
         }
 
-        OutlinePreferences.update(
+        EditorPreferences.update(
             profile = profileCombo.selectedItem as Profile,
             targetLanguage = languageCombo.selectedItem as String,
             preset = presetCombo.selectedItem as VerbosityLevel
@@ -140,9 +139,9 @@ class PyGlossConfigurable : Configurable {
         providerCombo.selectedItem = settings.provider
         baseUrlField.text = settings.baseUrl
         modelField.text = settings.model
-        profileCombo.selectedItem = OutlinePreferences.profile
-        languageCombo.selectedItem = OutlinePreferences.targetLanguage
-        presetCombo.selectedItem = OutlinePreferences.preset
+        profileCombo.selectedItem = EditorPreferences.profile
+        languageCombo.selectedItem = EditorPreferences.targetLanguage
+        presetCombo.selectedItem = EditorPreferences.preset
         resultLabel.isVisible = false
         SecretStore.getInstance().getApiKeyAsync { key ->
             invokeInSettingsDialog {

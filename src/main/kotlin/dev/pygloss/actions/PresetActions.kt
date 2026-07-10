@@ -4,7 +4,7 @@ import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.actionSystem.ToggleAction
 import com.intellij.openapi.project.DumbAware
 import dev.pygloss.cache.VerbosityLevel
-import dev.pygloss.render.OutlinePreferences
+import dev.pygloss.render.EditorPreferences
 
 /** Base action that persists the selected PyGloss verbosity preset. */
 abstract class PresetAction(
@@ -14,12 +14,12 @@ abstract class PresetAction(
 ) : ToggleAction(text, description, null), DumbAware {
 
     override fun isSelected(event: AnActionEvent): Boolean {
-        return OutlinePreferences.preset == preset
+        return EditorPreferences.preset == preset
     }
 
     override fun setSelected(event: AnActionEvent, state: Boolean) {
         if (state) {
-            OutlinePreferences.preset = preset
+            EditorPreferences.preset = preset
         }
     }
 }
@@ -42,7 +42,7 @@ class HintsPresetAction : PresetAction(
 class OutlinePresetAction : PresetAction(
     VerbosityLevel.OUTLINE,
     "Outline",
-    "Show PyGloss outline details"
+    "Show structural PyGloss hints in the editor"
 )
 
 /** Selects the detailed Reader preset. */

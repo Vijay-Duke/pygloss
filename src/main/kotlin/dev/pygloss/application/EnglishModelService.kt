@@ -170,9 +170,9 @@ class EnglishModelService(private val project: Project) {
         val observer = object : SummaryPipelineObserver {
             override fun summarySucceeded() = publisher.summarySucceeded(project)
 
-            override fun summaryFailed(error: LlmResult, requestedHashes: Set<String>) {
+            override fun summaryFailed(error: LlmResult) {
                 onFailure()
-                publisher.summaryFailed(project, error, requestedHashes)
+                publisher.summaryFailed(project, error)
             }
 
             override fun refresh(file: PyFile) = publisher.refreshFile(project, file)

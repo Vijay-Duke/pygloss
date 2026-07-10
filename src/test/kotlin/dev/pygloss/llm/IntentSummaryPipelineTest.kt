@@ -353,7 +353,6 @@ class IntentSummaryPipelineTest : BasePlatformTestCase() {
             """.trimIndent()
         )
         val model = BlockDetector.detect(file)
-        val function = functionNamed(model, name)
         adapter.nextResult = LlmResult.NetworkError
 
         createSynchronousPipeline().process(file, model)
@@ -361,18 +360,15 @@ class IntentSummaryPipelineTest : BasePlatformTestCase() {
         val status = IntentSummaryStatusService.getInstance(project)
         assertEquals("PyGloss: summaries unavailable", status.text())
         assertTrue(status.tooltip().contains("cannot reach the LLM provider"))
-        assertTrue(status.isSummaryUnavailable(function.psiHash))
 
         createEmptySnapshotPipeline().process(file, model)
 
         assertEquals("PyGloss: summaries unavailable", status.text())
-        assertTrue(status.isSummaryUnavailable(function.psiHash))
 
         adapter.nextResult = LlmResult.Success("Summarized.")
         createSynchronousPipeline().process(file, model)
 
         assertEquals("PyGloss", status.text())
-        assertFalse(status.isSummaryUnavailable(function.psiHash))
     }
 
     fun testProviderWideFailureStopsTheCurrentBatch() {
@@ -473,8 +469,8 @@ class IntentSummaryPipelineTest : BasePlatformTestCase() {
         return object : SummaryPipelineObserver {
             override fun summarySucceeded() = status.summarySucceeded()
 
-            override fun summaryFailed(error: LlmResult, requestedHashes: Set<String>) {
-                status.summaryFailed(error, requestedHashes)
+            override fun summaryFailed(error: LlmResult) {
+                status.summaryFailed(error)
             }
         }
     }

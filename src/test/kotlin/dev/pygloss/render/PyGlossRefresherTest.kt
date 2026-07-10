@@ -14,4 +14,11 @@ class PyGlossRefresherTest : TestCase() {
             PyGlossRefresher.surfacesForRefresh()
         )
     }
+
+    fun testRefreshCanSkipFoldRebuilding() {
+        assertEquals(
+            setOf(RefreshSurface.DAEMON),
+            PyGlossRefresher.surfacesForRefresh(refreshFoldRegions = false)
+        )
+    }
 }

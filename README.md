@@ -1,6 +1,6 @@
 # PyGloss
 
-PyGloss is a PyCharm plugin that adds a read-only explanation layer over Python source. It does not rewrite files. Instead, it uses editor folds, inlays, and an outline tool window so a reader can move between normal code and a more descriptive view.
+PyGloss is a PyCharm plugin that adds a read-only explanation layer over Python source. It does not rewrite files. All explanations appear directly inside the editor as folds and inlays, so the source and its descriptive view stay together.
 
 ## What it does
 
@@ -24,9 +24,8 @@ Requirements: JDK 21. The Gradle wrapper downloads the configured PyCharm platfo
 In the sandbox:
 
 1. Open [`examples/reader_demo.py`](examples/reader_demo.py).
-2. Open the **PyGloss** tool window on the right.
-3. Choose **Polyglot** and **Reader** to test the fully offline path.
-4. Click a folded line to reveal its original Python.
+2. Choose **Tools → PyGloss View → Reader** to test the fully offline path.
+3. Click a folded line to reveal its original Python.
 
 The first launch may reopen the last project used by the sandbox. Use **File → Open** to open this repository or the demo file.
 
@@ -38,7 +37,7 @@ Open **Settings → Tools → PyGloss**.
 - **Base URL:** a complete `http://` or `https://` endpoint.
 - **Model:** the provider's model identifier.
 - **API key:** stored through the IDE password store, not in the project or plugin state XML. It may be blank for a local endpoint such as Ollama.
-- **Reader profile, target language, and preset:** defaults shared by editor and outline views.
+- **Reader profile, target language, and preset:** defaults for the in-editor explanation layer.
 
 The **Summaries** sub-page is project-specific:
 
@@ -73,7 +72,7 @@ After Marketplace approval, search for **PyGloss** directly in PyCharm's Plugins
 
 - `application/` coordinates background model, provider, status, and refresh workflows.
 - `engine/` detects Python PSI blocks and builds the cached English model.
-- `render/` provides folds, inlays, status, and the outline tool window.
+- `render/` provides editor folds, inlays, refresh behavior, and status.
 - `llm/` contains provider adapters, prompts, and the provider-independent summary pipeline.
 - `cache/` owns in-memory and disk cache behavior.
 - `settings/` stores non-secret application and project preferences.

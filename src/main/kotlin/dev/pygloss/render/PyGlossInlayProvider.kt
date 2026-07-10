@@ -148,8 +148,6 @@ class PyGlossInlayProvider : InlayHintsProvider, DumbAware {
         /** Stable declarative inlay provider ID used in plugin registration. */
         const val ID: String = "dev.pygloss.conceptCallouts"
 
-        /** Read the active preset shared with the outline toolbar and preset actions. */
-
         private const val MAX_RIGHT_HINT_CHARS = 96
         private const val MAX_CONCEPT_CALLOUTS_PER_LINE = 2
     }
@@ -206,7 +204,7 @@ object U6OverlayProjection {
         if (settings.preset == VerbosityLevel.CODE) return emptyList()
         return model.blocks.flatMap { block ->
             walk(block)
-                .filter(::isMeaningfulBlock)
+                .filter { isVisibleSummaryBlock(it, settings.preset) }
                 .map { summaryForBlock(it, settings.profile) }
         }
     }
@@ -239,8 +237,13 @@ object U6OverlayProjection {
         return listOfNotNull(block.kind.name.lowercase(), name).joinToString(": ")
     }
 
-    private fun isMeaningfulBlock(block: EnglishBlock): Boolean {
-        return block.kind == BlockKind.CLASS || block.kind == BlockKind.FUNCTION
+    private fun isVisibleSummaryBlock(block: EnglishBlock, preset: VerbosityLevel): Boolean {
+        return when (preset) {
+            VerbosityLevel.CODE -> false
+            VerbosityLevel.HINTS -> block.kind != BlockKind.COMPREHENSION
+            VerbosityLevel.OUTLINE -> block.kind != BlockKind.COMPREHENSION || block.concepts.isNotEmpty()
+            VerbosityLevel.READER -> true
+        }
     }
 
     private fun walk(block: EnglishBlock): List<EnglishBlock> {

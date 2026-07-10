@@ -20,27 +20,33 @@ object PyGlossRefresher {
     private val log = Logger.getInstance(PyGlossRefresher::class.java)
 
     /** Cached render surfaces refreshed when PyGloss settings or generated summaries change. */
-    internal fun surfacesForRefresh(): Set<RefreshSurface> = RefreshSurface.entries.toSet()
+    internal fun surfacesForRefresh(refreshFoldRegions: Boolean = true): Set<RefreshSurface> = buildSet {
+        add(RefreshSurface.DAEMON)
+        if (refreshFoldRegions) add(RefreshSurface.FOLD_REGIONS)
+    }
 
     /** Refresh all open projects after global PyGloss preferences change. */
-    fun refreshAllProjects() {
+    fun refreshAllProjects(refreshFoldRegions: Boolean = true) {
+        val surfaces = surfacesForRefresh(refreshFoldRegions)
         ProjectManager.getInstance().openProjects.forEach { project ->
-            refreshProject(project, file = null)
+            refreshProject(project, file = null, surfaces)
         }
     }
 
     /** Refresh editor renderers after summaries for [file] have landed or regenerated. */
     fun refreshFile(project: Project, file: PyFile) {
-        refreshProject(project, file)
+        refreshProject(project, file, surfacesForRefresh())
     }
 
-    private fun refreshProject(project: Project, file: PyFile?) {
+    private fun refreshProject(project: Project, file: PyFile?, surfaces: Set<RefreshSurface>) {
         ApplicationManager.getApplication().invokeLater {
             if (project.isDisposed) return@invokeLater
 
             val virtualFile = file?.virtualFile
-            restartDaemon(project, file)
-            refreshOpenPythonFoldRegions(project, virtualFile, OutlinePreferences.preset)
+            if (RefreshSurface.DAEMON in surfaces) restartDaemon(project, file)
+            if (RefreshSurface.FOLD_REGIONS in surfaces) {
+                refreshOpenPythonFoldRegions(project, virtualFile, EditorPreferences.preset)
+            }
         }
     }
 

@@ -465,4 +465,4 @@ internal fun foldingPresetFor(preset: VerbosityLevel): FoldingPreset {
     }
 }
 
-private fun readActivePreset(): FoldingPreset = foldingPresetFor(OutlinePreferences.preset)
+private fun readActivePreset(): FoldingPreset = foldingPresetFor(EditorPreferences.preset)

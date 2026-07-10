@@ -10,7 +10,7 @@ Use this checklist in a real PyCharm Community 2025.3 IDE session. The plugin mu
 
 ## Rendering Polish
 
-- Confirm outline rows and block inlays read from the same cached summaries.
+- Confirm block inlays and Reader folds read from the same cached summaries.
 - Confirm pending summaries show the placeholder and later update without source edits.
 - Confirm Polyglot Lens wording says "Closest analogy" and includes a caveat when callouts are shown.
 - Confirm no text overlaps editor content in Hints, Outline, or Reader presets.
@@ -22,7 +22,7 @@ Use this checklist in a real PyCharm Community 2025.3 IDE session. The plugin mu
 - Edit only whitespace or comments and confirm summaries are reused.
 - Change the signature of one function and confirm only that block shows pending text before refreshing.
 - Use Regenerate on the caret block and confirm a fresh provider request is made.
-- Confirm stale badges appear in the outline while regeneration is pending.
+- Confirm the status bar reports pending regeneration and the editor refreshes when it completes.
 
 ## Provider And Secrets
 

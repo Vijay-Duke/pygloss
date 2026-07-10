@@ -133,7 +133,7 @@ open class LineTranslationService private constructor(
                 }
                 else -> if (firstFailure == null) {
                     firstFailure = result
-                    reportFirstBatchFailure(result, pending.statements)
+                    reportFirstBatchFailure(result)
                 }
             }
             if (isSuperseded(fileId, batchGeneration, pending)) return
@@ -168,9 +168,8 @@ open class LineTranslationService private constructor(
         project.messageBus.syncPublisher(ReaderUiEvents.TOPIC).refreshFile(project, file)
     }
 
-    private fun reportFirstBatchFailure(error: LlmResult, statements: List<String>) {
-        val keys = statements.mapTo(mutableSetOf()) { lineCacheKey(project, it) }
-        project.messageBus.syncPublisher(ReaderUiEvents.TOPIC).summaryFailed(project, error, keys)
+    private fun reportFirstBatchFailure(error: LlmResult) {
+        project.messageBus.syncPublisher(ReaderUiEvents.TOPIC).summaryFailed(project, error)
     }
 
     private fun logMissingTranslationsOnce(statements: List<String>, translations: Map<Int, String>) {

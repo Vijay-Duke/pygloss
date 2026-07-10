@@ -27,4 +27,14 @@ class PluginLoadsTest : BasePlatformTestCase() {
             dependencyIds.contains("com.intellij.modules.python")
         )
     }
+
+    fun testPluginDoesNotRegisterToolWindow() {
+        val pluginXml = checkNotNull(javaClass.classLoader.getResource("META-INF/plugin.xml"))
+            .readText()
+
+        assertFalse(
+            "PyGloss explanations must stay inside the editor instead of registering a tool window",
+            pluginXml.contains("<toolWindow")
+        )
+    }
 }

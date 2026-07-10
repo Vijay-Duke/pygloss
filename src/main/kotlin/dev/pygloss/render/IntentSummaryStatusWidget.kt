@@ -26,9 +26,6 @@ class IntentSummaryStatusService(private val project: Project) {
     private val notificationGate = FailureNotificationGate()
     @Volatile
     private var lastFailure: LlmResult? = null
-    @Volatile
-    // Raw PSI hashes, not prompt-aware disk keys: OutlineToolWindow asks by the visible block psiHash.
-    private var unavailableHashes: Set<String> = emptySet()
 
     /** Mark one Intent Summary batch as waiting on the provider. */
     fun summaryStarted() {
@@ -43,23 +40,16 @@ class IntentSummaryStatusService(private val project: Project) {
     }
 
     /** Record that the last Intent Summary batch could not generate every requested summary. */
-    fun summaryFailed(error: LlmResult, blockHashes: Set<String>) {
+    fun summaryFailed(error: LlmResult) {
         lastFailure = error
-        unavailableHashes = blockHashes
         updateWidget()
     }
 
     /** Clear the failed state after a later batch completes without provider errors. */
     fun summarySucceeded() {
         lastFailure = null
-        unavailableHashes = emptySet()
         notificationGate.reset()
         updateWidget()
-    }
-
-    /** Return whether a missing summary should be shown as unavailable for [blockHash]. */
-    fun isSummaryUnavailable(blockHash: String): Boolean {
-        return lastFailure != null && (unavailableHashes.isEmpty() || blockHash in unavailableHashes)
     }
 
     /** Short status-bar text. */
@@ -129,9 +119,9 @@ class ReaderUiEventListener : ReaderUiEvents {
         IntentSummaryStatusService.getInstance(project).summaryFinished()
     }
 
-    override fun summaryFailed(project: Project, error: LlmResult, affectedKeys: Set<String>) {
+    override fun summaryFailed(project: Project, error: LlmResult) {
         IntentSummaryStatusService.getInstance(project).apply {
-            summaryFailed(error, affectedKeys)
+            summaryFailed(error)
             notifyFirstBatchFailure(error)
         }
     }

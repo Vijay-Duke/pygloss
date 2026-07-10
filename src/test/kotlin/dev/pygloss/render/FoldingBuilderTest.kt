@@ -17,7 +17,7 @@ class FoldingBuilderTest : BasePlatformTestCase() {
 
     override fun tearDown() {
         try {
-            OutlinePreferences.preset = VerbosityLevel.HINTS
+            EditorPreferences.preset = VerbosityLevel.HINTS
             PyGlossProjectSettings.getInstance(project).update("", ExplainStyle.PLAIN, false)
         } finally {
             super.tearDown()
@@ -65,7 +65,7 @@ class FoldingBuilderTest : BasePlatformTestCase() {
 
     fun testProductionBuilderReadsSharedPresetPreference() {
         myFixture.configureByFile("folding/comprehension.py")
-        OutlinePreferences.preset = VerbosityLevel.CODE
+        EditorPreferences.preset = VerbosityLevel.CODE
 
         val descriptors = PyGlossFoldingBuilder().buildFoldRegions(myFixture.file, myFixture.editor.document, false)
 

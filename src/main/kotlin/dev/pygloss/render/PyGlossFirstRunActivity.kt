@@ -1,18 +1,14 @@
 package dev.pygloss.render
 
 import com.intellij.ide.util.PropertiesComponent
-import com.intellij.notification.Notification
-import com.intellij.notification.NotificationAction
 import com.intellij.notification.NotificationGroupManager
 import com.intellij.notification.NotificationType
-import com.intellij.openapi.actionSystem.AnActionEvent
 import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.FileEditorManager
 import com.intellij.openapi.fileEditor.FileEditorManagerListener
 import com.intellij.openapi.project.Project
 import com.intellij.openapi.startup.ProjectActivity
 import com.intellij.openapi.vfs.VirtualFile
-import com.intellij.openapi.wm.ToolWindowManager
 
 /** Shows a one-time introduction when the user first opens a Python file. */
 class PyGlossFirstRunActivity : ProjectActivity {
@@ -52,21 +48,6 @@ class PyGlossFirstRunActivity : ProjectActivity {
                     "Python. Your files are never modified.",
                 NotificationType.INFORMATION
             )
-        notification.addAction(
-            object : NotificationAction("Open tool window") {
-                override fun actionPerformed(event: AnActionEvent, notification: Notification) {
-                    ToolWindowManager.getInstance(project).getToolWindow("PyGloss")?.show()
-                    notification.expire()
-                }
-            }
-        )
-        notification.addAction(
-            object : NotificationAction("Don't show again") {
-                override fun actionPerformed(event: AnActionEvent, notification: Notification) {
-                    notification.expire()
-                }
-            }
-        )
         notification.notify(project)
         return true
     }

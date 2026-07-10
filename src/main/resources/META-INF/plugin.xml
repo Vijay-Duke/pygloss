@@ -7,8 +7,8 @@
 
     <description><![CDATA[
         <p>Read unfamiliar Python without rewriting it.</p>
-        <p>PyGloss adds a linked explanation layer to the PyCharm editor using folds,
-        inlays, reader folds, and an outline tool window. Its offline Polyglot Lens maps
+        <p>PyGloss adds a linked explanation layer directly inside the PyCharm editor using
+        folds, inlays, and reader views. Its offline Polyglot Lens maps
         Python idioms to concepts from JavaScript, Java, Go, or C#. Optional Intent
         Summaries use your configured OpenAI-compatible or Anthropic endpoint.</p>
         <p>Your source files remain unchanged. AI features are opt-in and provider
@@ -21,7 +21,7 @@
             <li>Offline Polyglot Lens for common Python concepts.</li>
             <li>Code, Hints, Outline, and Reader viewing presets.</li>
             <li>Optional provider-backed intent summaries and line translations.</li>
-            <li>Linked editor folds, inlays, and outline navigation.</li>
+            <li>Editor-only folds and inlays that leave more room for source code.</li>
         </ul>
     ]]></change-notes>
 
@@ -59,7 +59,6 @@
             implementation="dev.pygloss.render.IntentSummaryStatusWidgetFactory"/>
         <notificationGroup id="dev.pygloss.notifications" displayType="BALLOON"/>
         <postStartupActivity implementation="dev.pygloss.render.PyGlossFirstRunActivity"/>
-        <toolWindow id="PyGloss" anchor="right" factoryClass="dev.pygloss.render.OutlineToolWindowFactory"/>
     </extensions>
 
     <projectListeners>
@@ -97,7 +96,7 @@
                 id="dev.pygloss.preset.outline"
                 class="dev.pygloss.actions.OutlinePresetAction"
                 text="Outline"
-                description="Show PyGloss outline details"/>
+                description="Show structural PyGloss hints in the editor"/>
             <action
                 id="dev.pygloss.preset.reader"
                 class="dev.pygloss.actions.ReaderPresetAction"

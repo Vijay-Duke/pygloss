@@ -27,6 +27,9 @@ data class ConceptEntry(
  */
 object ConceptTable {
 
+    /** Target languages supported by the deterministic Polyglot Lens table. */
+    val supportedLanguages: List<String> = listOf("JS", "Java", "Go", "C#")
+
     private val table: Map<Concept, Map<String, ConceptEntry>> = buildTable()
 
     /** Look up an entry for a concept-language pair. */
@@ -38,9 +41,8 @@ object ConceptTable {
     fun allEntries(): Map<Concept, Map<String, ConceptEntry>> = table
 
     private fun buildTable(): Map<Concept, Map<String, ConceptEntry>> {
-        val langs = listOf("JS", "Java", "Go", "C#")
         return Concept.entries.associateWith { concept ->
-            langs.associateWith { lang -> entryFor(concept, lang) }
+            supportedLanguages.associateWith { lang -> entryFor(concept, lang) }
         }
     }
 

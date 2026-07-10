@@ -1,6 +1,7 @@
 package dev.pygloss.render
 
 import com.intellij.testFramework.fixtures.BasePlatformTestCase
+import com.intellij.psi.util.PsiTreeUtil
 import com.jetbrains.python.psi.PyFile
 import dev.pygloss.cache.Profile
 import dev.pygloss.cache.VerbosityLevel
@@ -92,6 +93,35 @@ class InlayProviderTest : BasePlatformTestCase() {
         assertNull(refreshed.singleOrNull {
             it.offset == asyncBlock.anchorOffset && it.text.startsWith("summary pending:")
         })
+    }
+
+    fun testNestedBlockSummariesRemainAvailableInsideTheEditor() {
+        val file = myFixture.configureByText(
+            "nested_summaries.py",
+            """
+            def collect(items, resource):
+                with resource:
+                    for item in items:
+                        if item:
+                            while item:
+                                item -= 1
+                try:
+                    return [value for value in items]
+                except Exception:
+                    return []
+            """.trimIndent()
+        ) as PyFile
+        val model = BlockDetector.detect(file)
+        val blocks = flatten(model.blocks)
+        val summaries = U6OverlayProjection.blockSummaries(model, summarySettings(VerbosityLevel.READER))
+        val anchorOffsets = PsiTreeUtil.collectElements(file, ::isBlockSummaryAnchor)
+            .mapTo(mutableSetOf()) { it.textRange.startOffset }
+
+        assertEquals("Reader should project every detected semantic block", blocks.size, summaries.size)
+        blocks.forEach { block ->
+            assertTrue("Missing editor summary for ${block.kind}", summaries.any { it.offset == block.anchorOffset })
+            assertTrue("Missing PSI anchor for ${block.kind}", block.anchorOffset in anchorOffsets)
+        }
     }
 
     fun testCodePresetSuppressesInlaysAndHintsPresetShowsThem() {
@@ -194,6 +224,10 @@ class InlayProviderTest : BasePlatformTestCase() {
             }
         }
         return model.copy(blocks = update(model.blocks))
+    }
+
+    private fun flatten(blocks: List<EnglishBlock>): List<EnglishBlock> {
+        return blocks.flatMap { block -> listOf(block) + flatten(block.children) }
     }
 
     private fun inlayFixture(): String {

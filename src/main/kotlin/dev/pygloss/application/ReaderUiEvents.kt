@@ -11,7 +11,7 @@ interface ReaderUiEvents {
 
     fun summaryFinished(project: Project) = Unit
 
-    fun summaryFailed(project: Project, error: LlmResult, affectedKeys: Set<String>) = Unit
+    fun summaryFailed(project: Project, error: LlmResult) = Unit
 
     fun summarySucceeded(project: Project) = Unit
 

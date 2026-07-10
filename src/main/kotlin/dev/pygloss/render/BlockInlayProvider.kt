@@ -12,9 +12,15 @@ import com.intellij.openapi.project.DumbAware
 import com.intellij.psi.PsiElement
 import com.intellij.psi.PsiFile
 import com.jetbrains.python.psi.PyClass
+import com.jetbrains.python.psi.PyComprehensionElement
 import com.jetbrains.python.psi.PyDocStringOwner
 import com.jetbrains.python.psi.PyFile
+import com.jetbrains.python.psi.PyForStatement
 import com.jetbrains.python.psi.PyFunction
+import com.jetbrains.python.psi.PyIfStatement
+import com.jetbrains.python.psi.PyTryExceptStatement
+import com.jetbrains.python.psi.PyWhileStatement
+import com.jetbrains.python.psi.PyWithStatement
 import dev.pygloss.cache.Profile
 import dev.pygloss.cache.VerbosityLevel
 import dev.pygloss.application.EnglishModelService
@@ -23,12 +29,12 @@ import javax.swing.JPanel
 /** Prefix used for summaries that are not ready yet. */
 private const val PENDING_PREFIX: String = "summary pending:"
 
-/** Read shared outline preferences for block-summary projection. */
+/** Read shared editor preferences for block-summary projection. */
 internal fun readOverlaySettings(): InlayOverlaySettings {
     return InlayOverlaySettings(
-        profile = OutlinePreferences.profile,
-        targetLanguage = OutlinePreferences.targetLanguage,
-        preset = OutlinePreferences.preset
+        profile = EditorPreferences.profile,
+        targetLanguage = EditorPreferences.targetLanguage,
+        preset = EditorPreferences.preset
     )
 }
 
@@ -95,9 +101,7 @@ class BlockInlayFallbackProvider : InlayHintsProvider<NoSettings>, DumbAware {
             return true
         }
 
-        private fun isAnchorElement(element: PsiElement): Boolean {
-            return element is PyClass || element is PyFunction
-        }
+        private fun isAnchorElement(element: PsiElement): Boolean = isBlockSummaryAnchor(element)
 
         private fun inlayText(inlay: OverlayInlay, element: PsiElement): String? {
             return if (inlay.text.startsWith(PENDING_PREFIX)) {
@@ -158,4 +162,16 @@ class BlockInlayFallbackProvider : InlayHintsProvider<NoSettings>, DumbAware {
             private const val MAX_INLAY_LINES = 4
         }
     }
+}
+
+/** Return whether [element] can anchor a semantic block summary inside the editor. */
+internal fun isBlockSummaryAnchor(element: PsiElement): Boolean {
+    return element is PyClass ||
+        element is PyFunction ||
+        element is PyIfStatement ||
+        element is PyForStatement ||
+        element is PyWhileStatement ||
+        element is PyWithStatement ||
+        element is PyTryExceptStatement ||
+        element is PyComprehensionElement
 }

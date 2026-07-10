@@ -42,7 +42,7 @@ data class SummaryTarget(
 /** Application callbacks for status and refresh side effects. */
 interface SummaryPipelineObserver {
     fun summarySucceeded() = Unit
-    fun summaryFailed(error: LlmResult, requestedHashes: Set<String>) = Unit
+    fun summaryFailed(error: LlmResult) = Unit
     fun refresh(file: PyFile) = Unit
 
     companion object {
@@ -229,7 +229,7 @@ open class IntentSummaryPipeline(
                     log.warn("Intent Summary adapter failed for ${snapshot.stableId}: $result")
                     if (firstFailure == null) {
                         firstFailure = result
-                        reportFirstBatchFailure(result, requestedHashes)
+                        reportFirstBatchFailure(result)
                     }
                     break
                 }
@@ -243,8 +243,8 @@ open class IntentSummaryPipeline(
         }
     }
 
-    private fun reportFirstBatchFailure(error: LlmResult, requestedHashes: Set<String>) {
-        observer.summaryFailed(error, requestedHashes)
+    private fun reportFirstBatchFailure(error: LlmResult) {
+        observer.summaryFailed(error)
     }
 
     private fun isSuperseded(file: PyFile, batchGeneration: Long, modificationStamp: Long): Boolean {
