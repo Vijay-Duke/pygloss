@@ -37,10 +37,26 @@ jobs:
           MANUAL_VERSION: ${{ inputs.version }}
         run: |
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
-            echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+            value="${GITHUB_REF_NAME#v}"
           else
-            echo "value=$MANUAL_VERSION" >> "$GITHUB_OUTPUT"
+            value="$MANUAL_VERSION"
           fi
+          echo "value=$value" >> "$GITHUB_OUTPUT"
+          echo "tag=v$value" >> "$GITHUB_OUTPUT"
+
+      - name: Create and push release tag for manual runs
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          if git ls-remote --exit-code --tags origin "refs/tags/${RELEASE_TAG}" >/dev/null 2>&1; then
+            echo "Tag ${RELEASE_TAG} already exists; choose a new version."
+            exit 1
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -a "$RELEASE_TAG" -m "Release $RELEASE_TAG"
+          git push origin "$RELEASE_TAG"
 
       - name: Test, verify, and build plugin
         run: ./gradlew test verifyPlugin buildPlugin -PpluginVersion=${{ steps.version.outputs.value }}
@@ -54,7 +70,8 @@ jobs:
         run: ./gradlew publishPlugin -PpluginVersion=${{ steps.version.outputs.value }}
 
       - name: Create GitHub release
-        if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" build/distributions/*.zip --generate-notes --title "PyGloss $GITHUB_REF_NAME"
+          RELEASE_TAG: ${{ steps.version.outputs.tag }}
+        run: gh release create "$RELEASE_TAG" build/distributions/*.zip --generate-notes --title "PyGloss $RELEASE_TAG"
