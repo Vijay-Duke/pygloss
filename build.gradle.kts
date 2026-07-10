@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "dev.pygloss"
-version = providers.gradleProperty("pluginVersion").getOrElse("0.1.0")
+version = providers.gradleProperty("pluginVersion").getOrElse("0.1.1")
 
 repositories {
     mavenCentral()

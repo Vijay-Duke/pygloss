@@ -2,7 +2,7 @@
 <idea-plugin>
     <id>dev.pygloss</id>
     <name>PyGloss</name>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <vendor email="Mail@VijayIyengar.com" url="https://github.com/Vijay-Duke">Vijay Iyengar</vendor>
 
     <description><![CDATA[
@@ -16,6 +16,10 @@
     ]]></description>
 
     <change-notes><![CDATA[
+        <p><strong>0.1.1</strong> — Editor-only update.</p>
+        <ul>
+            <li>Removed the separate PyGloss tool window; explanations now stay in the editor.</li>
+        </ul>
         <p><strong>0.1.0</strong> — Initial public release.</p>
         <ul>
             <li>Offline Polyglot Lens for common Python concepts.</li>
