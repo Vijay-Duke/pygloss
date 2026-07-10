@@ -5,12 +5,12 @@ Use this checklist in a real PyCharm Community 2025.3 IDE session. The plugin mu
 ## Fixture Setup
 
 - Open the plugin sandbox project with `src/test/testData/qa/reader_fixture.py`.
-- Set the py-to-english profile to Intent Summary and preset to Hints, Outline, then Reader.
+- Set the PyGloss profile to Intent Summary and preset to Hints, Outline, then Reader.
 - Configure OpenAI-compatible provider with `http://localhost:11434/v1` and model `gpt-oss:20b` for local Ollama validation.
 
 ## Rendering Polish
 
-- Confirm outline rows, Code Vision, and block inlay fallback all read from the same summaries.
+- Confirm outline rows and block inlays read from the same cached summaries.
 - Confirm pending summaries show the placeholder and later update without source edits.
 - Confirm Polyglot Lens wording says "Closest analogy" and includes a caveat when callouts are shown.
 - Confirm no text overlaps editor content in Hints, Outline, or Reader presets.

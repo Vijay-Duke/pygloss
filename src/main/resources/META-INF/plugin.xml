@@ -1,14 +1,29 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <idea-plugin>
-    <id>dev.pytoenglish</id>
-    <name>py-to-english</name>
+    <id>dev.pygloss</id>
+    <name>PyGloss</name>
     <version>0.1.0</version>
-    <vendor email="dev@pytoenglish.dev">py-to-english</vendor>
+    <vendor email="Mail@VijayIyengar.com" url="https://github.com/Vijay-Duke">Vijay Iyengar</vendor>
 
     <description><![CDATA[
-        English-over-Python reader plugin. Renders deterministic English annotations
-        over Python source without modifying the file.
+        <p>Read unfamiliar Python without rewriting it.</p>
+        <p>PyGloss adds a linked explanation layer to the PyCharm editor using folds,
+        inlays, reader folds, and an outline tool window. Its offline Polyglot Lens maps
+        Python idioms to concepts from JavaScript, Java, Go, or C#. Optional Intent
+        Summaries use your configured OpenAI-compatible or Anthropic endpoint.</p>
+        <p>Your source files remain unchanged. AI features are opt-in and provider
+        credentials are stored in the IDE password store.</p>
     ]]></description>
+
+    <change-notes><![CDATA[
+        <p><strong>0.1.0</strong> — Initial public release.</p>
+        <ul>
+            <li>Offline Polyglot Lens for common Python concepts.</li>
+            <li>Code, Hints, Outline, and Reader viewing presets.</li>
+            <li>Optional provider-backed intent summaries and line translations.</li>
+            <li>Linked editor folds, inlays, and outline navigation.</li>
+        </ul>
+    ]]></change-notes>
 
     <!-- Hard dependency on the Python module (always present in PyCharm) -->
     <depends>com.intellij.modules.python</depends>
@@ -20,21 +35,74 @@
     <extensions defaultExtensionNs="com.intellij">
         <applicationConfigurable
             parentId="tools"
-            instance="dev.pytoenglish.settings.PyEnglishConfigurable"
-            id="dev.pytoenglish.settings"
-            displayName="py-to-english"/>
-        <lang.foldingBuilder language="Python" implementationClass="dev.pytoenglish.render.PyEnglishFoldingBuilder"/>
+            instance="dev.pygloss.render.config.PyGlossConfigurable"
+            id="dev.pygloss.settings"
+            displayName="PyGloss"/>
+        <projectConfigurable
+            parentId="dev.pygloss.settings"
+            instance="dev.pygloss.render.config.PyGlossSummaryConfigurable"
+            id="dev.pygloss.settings.summaries"
+            displayName="Summaries"/>
+        <lang.foldingBuilder language="Python" implementationClass="dev.pygloss.render.PyGlossFoldingBuilder"/>
         <codeInsight.declarativeInlayProvider
             language="Python"
-            implementationClass="dev.pytoenglish.render.PyEnglishInlayProvider"
-            providerId="dev.pytoenglish.conceptCallouts"
+            implementationClass="dev.pygloss.render.PyGlossInlayProvider"
+            providerId="dev.pygloss.conceptCallouts"
+            group="CODE_VISION_GROUP_NEW"
+            bundle="messages.PyGlossBundle"
+            nameKey="inlay.conceptCallouts.name"
+            descriptionKey="inlay.conceptCallouts.description"
             isEnabledByDefault="true"/>
-        <codeInsight.daemonBoundCodeVisionProvider implementation="dev.pytoenglish.render.CodeVisionAdapter"/>
-        <codeInsight.inlayProvider
-            language="Python"
-            implementationClass="dev.pytoenglish.render.BlockInlayFallbackProvider"
-            settingsKeyId="dev.pytoenglish.blockSummaries"
-            isEnabledByDefault="true"/>
-        <toolWindow id="py-to-english" anchor="right" factoryClass="dev.pytoenglish.render.OutlineToolWindowFactory"/>
+        <codeInsight.inlayProvider language="Python" implementationClass="dev.pygloss.render.BlockInlayFallbackProvider"/>
+        <statusBarWidgetFactory
+            id="dev.pygloss.intentSummaryStatus"
+            implementation="dev.pygloss.render.IntentSummaryStatusWidgetFactory"/>
+        <notificationGroup id="dev.pygloss.notifications" displayType="BALLOON"/>
+        <postStartupActivity implementation="dev.pygloss.render.PyGlossFirstRunActivity"/>
+        <toolWindow id="PyGloss" anchor="right" factoryClass="dev.pygloss.render.OutlineToolWindowFactory"/>
     </extensions>
+
+    <projectListeners>
+        <listener
+            class="dev.pygloss.render.ReaderUiEventListener"
+            topic="dev.pygloss.application.ReaderUiEvents"/>
+    </projectListeners>
+
+    <actions>
+        <action
+            id="dev.pygloss.regenerate"
+            class="dev.pygloss.actions.RegenerateAction"
+            text="Regenerate English Summary"
+            description="Re-asks the LLM for the PyGloss summary of the block at the caret.">
+            <add-to-group group-id="EditorPopupMenu" anchor="last"/>
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+        </action>
+        <group
+            id="dev.pygloss.presets"
+            class="com.intellij.openapi.actionSystem.DefaultActionGroup"
+            text="PyGloss View"
+            popup="true">
+            <add-to-group group-id="ToolsMenu" anchor="last"/>
+            <action
+                id="dev.pygloss.preset.code"
+                class="dev.pygloss.actions.CodePresetAction"
+                text="Code"
+                description="Show source-first PyGloss output"/>
+            <action
+                id="dev.pygloss.preset.hints"
+                class="dev.pygloss.actions.HintsPresetAction"
+                text="Hints"
+                description="Show concise PyGloss hints"/>
+            <action
+                id="dev.pygloss.preset.outline"
+                class="dev.pygloss.actions.OutlinePresetAction"
+                text="Outline"
+                description="Show PyGloss outline details"/>
+            <action
+                id="dev.pygloss.preset.reader"
+                class="dev.pygloss.actions.ReaderPresetAction"
+                text="Reader"
+                description="Show detailed PyGloss reader output"/>
+        </group>
+    </actions>
 </idea-plugin>

@@ -4,8 +4,8 @@ plugins {
     id("org.jetbrains.intellij.platform") version "2.11.0"
 }
 
-group = "dev.pytoenglish"
-version = "0.1.0"
+group = "dev.pygloss"
+version = providers.gradleProperty("pluginVersion").getOrElse("0.1.0")
 
 repositories {
     mavenCentral()
@@ -46,6 +46,14 @@ intellijPlatform {
         ideaVersion {
             sinceBuild = "253"
         }
+    }
+    publishing {
+        token = providers.environmentVariable("PUBLISH_TOKEN")
+    }
+    signing {
+        certificateChain = providers.environmentVariable("CERTIFICATE_CHAIN")
+        privateKey = providers.environmentVariable("PRIVATE_KEY")
+        password = providers.environmentVariable("PRIVATE_KEY_PASSWORD")
     }
     pluginVerification {
         ides {

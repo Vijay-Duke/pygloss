@@ -4,6 +4,19 @@ build/
 *.iml
 .idea/
 .intellijPlatform/
+.codegraph/
+.cursor/
+.brooks-lint-history.json
+.DS_Store
+
+# Local credentials and signing material
+.env
+.env.*
+*.key
+*.pem
+*.p12
+*.crt
+secrets/
 
 # Kotlin daemon session files
 .kotlin/
