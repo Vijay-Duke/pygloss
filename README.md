@@ -83,3 +83,5 @@ After Marketplace approval, search for **PyGloss** directly in PyCharm's Plugins
 Polyglot mode is local and deterministic. Intent Summary and AI line translation send bounded source context or selected statements to the configured provider. AI line translation is opt-in because it can make many more provider calls than block summaries.
 
 PyGloss does not collect telemetry. Provider API keys are stored through the IntelliJ Platform password store and are never written to the project or plugin settings XML.
+
+See the full [Privacy Policy](PRIVACY.md).
