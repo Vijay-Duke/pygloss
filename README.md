@@ -64,9 +64,9 @@ Build output is written under `build/distributions/`.
 
 ## Installation
 
-Until the first Marketplace release is approved, build the plugin with `./gradlew buildPlugin`, then install the ZIP from **Settings → Plugins → ⚙ → Install Plugin from Disk**.
+PyGloss is available from the JetBrains Marketplace. In PyCharm, open **Settings → Plugins → Marketplace**, search for **PyGloss**, and install it directly.
 
-After Marketplace approval, search for **PyGloss** directly in PyCharm's Plugins settings.
+For local development, build the plugin with `./gradlew buildPlugin`, then install the ZIP from **Settings → Plugins → ⚙ → Install Plugin from Disk**.
 
 ## Project structure
 
