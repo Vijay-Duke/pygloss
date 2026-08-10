@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "dev.pygloss"
-version = providers.gradleProperty("pluginVersion").getOrElse("0.1.1")
+version = providers.gradleProperty("pluginVersion").getOrElse("0.1.2")
 
 repositories {
     mavenCentral()
@@ -38,6 +38,7 @@ java {
 kotlin {
     compilerOptions {
         jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_21)
+        jvmDefault.set(org.jetbrains.kotlin.gradle.dsl.JvmDefaultMode.NO_COMPATIBILITY)
     }
 }
 

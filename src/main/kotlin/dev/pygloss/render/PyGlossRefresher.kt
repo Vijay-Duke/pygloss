@@ -53,7 +53,7 @@ object PyGlossRefresher {
     private fun restartDaemon(project: Project, file: PyFile?) {
         runRefreshStep("restart daemon") {
             val analyzer = DaemonCodeAnalyzer.getInstance(project)
-            if (file == null) analyzer.restart() else analyzer.restart(file)
+            if (file == null) analyzer.restart("PyGloss refresh") else analyzer.restart(file, "PyGloss refresh")
         }
     }
 
